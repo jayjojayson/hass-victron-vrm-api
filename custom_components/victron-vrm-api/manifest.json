@@ -1,0 +1,11 @@
+{
+  "domain": "victron-vrm-api",
+  "name": "Victron VRM API",
+  "version": "1.0", 
+  "config_flow": true,
+  "documentation": "https://github.com/jayjojayson/hass-victron-vrm-api",
+  "issue_tracker": "https://github.com/jayjojayson/hass-victron-vrm-api/issues",
+  "codeowners": ["@jayjojayson"],
+  "integration_type": "hub",
+  "iot_class": "cloud_polling"
+}
