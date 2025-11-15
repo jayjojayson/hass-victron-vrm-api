@@ -5,9 +5,11 @@ Victron VRM API Integration for Home Assistant
 
 This integration use the Victron VRM Portal to get Data from the API. At this Time you can read the Data from your Battery and Multiplus. Also you get the Overall Stats for the Day, Week, Month and Year.
 
+If you like the Integration, I would appreciate a star rating ⭐ from you. 🤗
+
 # 📥 Installing the Integration
 
-## ➡️ HACS
+### ➡️ HACS
 
 - Simply follow the Link to integrate this repository to HACS
   
@@ -17,7 +19,8 @@ This integration use the Victron VRM Portal to get Data from the API. At this Ti
 - search for `victron vrm api` or short `vrm`
 - fill in your Side_ID, Token and Instance_ID for Battery and Multiplus
 
-## ➡️ Manual
+#
+### ➡️ Manual
 
 - dowonload the latetest Release
 - copy the folder "victron-vrm-api" inside your custom_components of Home Assistant
