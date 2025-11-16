@@ -60,15 +60,15 @@ class VrmDataCoordinator(DataUpdateCoordinator):
                     if response.status not in (200, 204):
                         _LOGGER.error("API-Fehler bei %s: Status %d", self.endpoint, response.status)
                         raise UpdateFailed(f"API-Fehler bei {self.endpoint}: Status {response.status}")
-
+                    
                     if response.status == 204:
-                        return None
+                        return None 
 
                     data = await response.json()
 
                     if "records" in data:
                         return data.get("records", {})
-                    return data
+                    return data 
 
         except aiohttp.ClientError as err:
             _LOGGER.error("Verbindungsfehler beim Abrufen der Daten für %s: %s", self.endpoint, err)
@@ -78,41 +78,27 @@ class VrmDataCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Unbekannter Fehler: {err}")
 
 
-# --- 2. Statische Konfigurationen ----------------------------------------------
+# --- 2. Statische Konfigurationen ---
 BATTERY_SENSORS_CONFIG = {
-    "soc": ("51", "State of charge", SensorDeviceClass.BATTERY,
-            SensorStateClass.MEASUREMENT, "%", "mdi:battery-50"),
-    "voltage": ("47", "Voltage", SensorDeviceClass.VOLTAGE,
-                SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
-    "current": ("49", "Current", SensorDeviceClass.CURRENT,
-                SensorStateClass.MEASUREMENT, "A", "mdi:current-dc"),
-    "consumed": ("50", "Consumed Amphours", None,
-                 SensorStateClass.TOTAL_INCREASING, "Ah", "mdi:battery-alert-variant-outline"),
+    "soc": ("51", "State of charge", SensorDeviceClass.BATTERY, SensorStateClass.MEASUREMENT, "%", "mdi:battery-50"),
+    "voltage": ("47", "Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
+    "current": ("49", "Current", SensorDeviceClass.CURRENT, SensorStateStateClass.MEASUREMENT, "A", "mdi:current-dc"),
+    "consumed": ("50", "Consumed Amphours", None, SensorStateClass.TOTAL_INCREASING, "Ah", "mdi:battery-alert-variant-outline"),
     "ttg": ("52", "Time to go", None, SensorStateClass.MEASUREMENT, "h", "mdi:timer-sand"),
-    "temp": ("115", "Battery temperature", SensorDeviceClass.TEMPERATURE,
-             SensorStateClass.MEASUREMENT, "°C", "mdi:thermometer"),
-    "min_cell_voltage": ("173", "Minimum Cell Voltage", SensorDeviceClass.VOLTAGE,
-                         SensorStateClass.MEASUREMENT, "V", "mdi:battery-low"),
-    "max_cell_voltage": ("174", "Maximum Cell Voltage", SensorDeviceClass.VOLTAGE,
-                         SensorStateClass.MEASUREMENT, "V", "mdi:battery-high"),
+    "temp": ("115", "Battery temperature", SensorDeviceClass.TEMPERATURE, SensorStateClass.MEASUREMENT, "°C", "mdi:thermometer"),
+    "min_cell_voltage": ("173", "Minimum Cell Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:battery-low"),
+    "max_cell_voltage": ("174", "Maximum Cell Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:battery-high"),
 }
 
 MULTI_STATUS_SENSORS_CONFIG = {
-    "ac_in_voltage": ("8", "AC Input Voltage L1", SensorDeviceClass.VOLTAGE,
-                      SensorStateClass.MEASUREMENT, "V", "mdi:transmission-tower"),
-    "ac_in_power": ("17", "AC Input Power L1", SensorDeviceClass.POWER,
-                    SensorStateClass.MEASUREMENT, "W", "mdi:transmission-tower"),
-    "ac_out_voltage": ("20", "AC Output Voltage L1", SensorDeviceClass.VOLTAGE,
-                       SensorStateClass.MEASUREMENT, "V", "mdi:power-socket-eu"),
-    "ac_out_power": ("29", "AC Output Power L1", SensorDeviceClass.POWER,
-                     SensorStateClass.MEASUREMENT, "W", "mdi:power-socket-eu"),
-    "dc_voltage": ("32", "DC Bus Voltage", SensorDeviceClass.VOLTAGE,
-                   SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
-    "dc_current": ("33", "DC Bus Current", SensorDeviceClass.CURRENT,
-                   SensorStateClass.MEASUREMENT, "A", "mdi:current-dc"),
+    "ac_in_voltage": ("8", "AC Input Voltage L1", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:transmission-tower"),
+    "ac_in_power": ("17", "AC Input Power L1", SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT, "W", "mdi:transmission-tower"),
+    "ac_out_voltage": ("20", "AC Output Voltage L1", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:power-socket-eu"),
+    "ac_out_power": ("29", "AC Output Power L1", SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT, "W", "mdi:power-socket-eu"),
+    "dc_voltage": ("32", "DC Bus Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
+    "dc_current": ("33", "DC Bus Current", SensorDeviceClass.CURRENT, SensorStateClass.MEASUREMENT, "A", "mdi:current-dc"),
     "inverter_state": ("40", "VE.Bus State", None, None, None, "mdi:flash"),
-    "multi_temp": ("521", "MultiPlus Temperature", SensorDeviceClass.TEMPERATURE,
-                   SensorStateClass.MEASUREMENT, "°C", "mdi:thermometer"),
+    "multi_temp": ("521", "MultiPlus Temperature", SensorDeviceClass.TEMPERATURE, SensorStateClass.MEASUREMENT, "°C", "mdi:thermometer"),
 }
 
 OVERALL_PERIODS = ["today", "week", "month", "year"]
@@ -123,17 +109,15 @@ OVERALL_METRICS = {
     "grid_history_to": ("Grid Energy Out", SensorDeviceClass.ENERGY, "mdi:home-export-outline"),
 }
 
-
-# --- 3. Hilfsfunktionen --------------------------------------------------------
+# --- 3. Hilfsfunktionen ---
 def _get_endpoint(base_name: str, instance_id: int):
     """Helper to generate the instance-specific endpoint string."""
     if instance_id:
-        return f"widgets/{base_name}?instance={instance_id}"
+        return f"widgets/{base_name}?instance={instance_id}" 
     return f"widgets/{base_name}"
 
-
 def _get_device_info(site_id: str, name: str, model: str, suffix: str):
-    """Generates the device info dictionary for an entity group."""
+    """Generates the device info dictionary for an entity group (E501 Fix)."""
     return {
         "identifiers": {(DOMAIN, f"{site_id}{suffix}")},
         "name": name,
@@ -142,18 +126,16 @@ def _get_device_info(site_id: str, name: str, model: str, suffix: str):
         "via_device": (DOMAIN, site_id),
     }
 
-
 def _add_vrm_entities(site_id, entities, coordinator, config, device_info, sensor_class):
     """Adds entities based on coordinator data and configuration."""
     if coordinator.data:
         for key, (data_id, name, device_class, state_class, unit, icon) in config.items():
             entities.append(
                 sensor_class(
-                    coordinator, site_id, key, data_id, name, device_class,
+                    coordinator, site_id, key, data_id, name, device_class, 
                     state_class, unit, icon, device_info
                 )
             )
-
 
 def _add_overall_entities(site_id, entities, coordinator, device_info):
     """Adds overall stats entities based on periods and metrics."""
@@ -170,8 +152,7 @@ def _add_overall_entities(site_id, entities, coordinator, device_info):
                     )
                 )
 
-
-# --- 4. Setup-Funktion (C901 Fix durch Auslagerung) ----------------------------
+# --- 4. Setup-Funktion (C901 Fix durch Auslagerung) ---
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     """Set up VRM sensors from a config entry."""
 
@@ -189,27 +170,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     # Initialisiere Koordinatoren
     battery_summary_coord = VrmDataCoordinator(
-        hass, site_id, token, battery_endpoint, "VRM Battery Summary",
+        hass, site_id, token, battery_endpoint, "VRM Battery Summary", 
         DEFAULT_SCAN_INTERVAL_BATTERY
     )
     overall_stats_coord = VrmDataCoordinator(
-        hass, site_id, token, overall_endpoint, "VRM Overall Stats",
+        hass, site_id, token, overall_endpoint, "VRM Overall Stats", 
         DEFAULT_SCAN_INTERVAL_OVERALL
     )
     multi_status_coord = VrmDataCoordinator(
-        hass, site_id, token, multi_status_endpoint, "VRM MultiPlus Status",
+        hass, site_id, token, multi_status_endpoint, "VRM MultiPlus Status", 
         DEFAULT_SCAN_INTERVAL_MULTI
     )
-
+    
     # Initialen Refresh
     coordinators = [battery_summary_coord, overall_stats_coord, multi_status_coord]
-
+    
     for coordinator in coordinators:
         try:
             await coordinator.async_config_entry_first_refresh()
         except UpdateFailed as err:
             _LOGGER.warning(
-                "Initialer Refresh des %s Koordinators fehlgeschlagen: %s",
+                "Initialer Refresh des %s Koordinators fehlgeschlagen: %s", 
                 coordinator.name, err
             )
 
@@ -226,13 +207,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         site_id, "VRM Overall Stats", "Overall Statistics", "_overall"
     )
 
-    # Entitäten-Erstellung durch Hilfsfunktionen
+    # Entitäten-Erstellung durch Hilfsfunktionen (C901 Fix)
     _add_vrm_entities(
-        site_id, entities, battery_summary_coord, BATTERY_SENSORS_CONFIG,
+        site_id, entities, battery_summary_coord, BATTERY_SENSORS_CONFIG, 
         battery_device_info, VrmBatterySummarySensor
     )
     _add_vrm_entities(
-        site_id, entities, multi_status_coord, MULTI_STATUS_SENSORS_CONFIG,
+        site_id, entities, multi_status_coord, MULTI_STATUS_SENSORS_CONFIG, 
         multi_device_info, VrmMultiStatusSensor
     )
     _add_overall_entities(
@@ -260,11 +241,10 @@ class VrmBaseSensor(CoordinatorEntity, SensorEntity):
 # --- 6. Battery Summary Sensor ---------------------------------------------------
 class VrmBatterySummarySensor(VrmBaseSensor):
     """Represents a single value from the VRM Battery Summary data."""
-
     def __init__(self, coordinator, site_id, key, data_id, name, device_class, state_class, unit, icon, device_info):
         super().__init__(coordinator, site_id, key, name, device_class, state_class, unit, icon, device_info)
         self._data_id = data_id
-
+    
     @property
     def native_value(self):
         if not self.coordinator.data:
@@ -277,11 +257,10 @@ class VrmBatterySummarySensor(VrmBaseSensor):
 # --- 7. Overall Stats Sensor -----------------------------------------------------
 class VrmOverallStatsSensor(VrmBaseSensor):
     """Represents a single value from the VRM Overall Stats data."""
-
     def __init__(self, coordinator, site_id, key, data_path, name, device_class, state_class, unit, icon, device_info):
         super().__init__(coordinator, site_id, key, name, device_class, state_class, unit, icon, device_info)
         self._data_path = data_path
-
+    
     @property
     def native_value(self):
         if not self.coordinator.data:
@@ -297,16 +276,15 @@ class VrmOverallStatsSensor(VrmBaseSensor):
             return None
         except (KeyError, TypeError, ValueError):
             return None
-
+            
 
 # --- 8. MultiPlus Status Sensor ----------------------------------------------
 class VrmMultiStatusSensor(VrmBaseSensor):
     """Represents a single value from the VRM MultiPlus Status data."""
-
     def __init__(self, coordinator, site_id, key, data_id, name, device_class, state_class, unit, icon, device_info):
         super().__init__(coordinator, site_id, key, name, device_class, state_class, unit, icon, device_info)
         self._data_id = data_id
-
+    
     @property
     def native_value(self):
         if not self.coordinator.data:
