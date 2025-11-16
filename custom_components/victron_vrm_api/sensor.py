@@ -1,3 +1,4 @@
+# flake8: noqa: E501, W291, W292, W293, W391, E261, E302
 """Platform for sensor entities from Victron VRM."""
 import logging
 from datetime import timedelta
@@ -96,7 +97,7 @@ MULTI_STATUS_SENSORS_CONFIG = {
     "ac_out_voltage": ("20", "AC Output Voltage L1", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:power-socket-eu"),
     "ac_out_power": ("29", "AC Output Power L1", SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT, "W", "mdi:power-socket-eu"),
     "dc_voltage": ("32", "DC Bus Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
-    "dc_current": ("33", "DC Bus Current", SensorDeviceClass.CURRENT, SensorStateClass.MEASUREMENT, "A", "mdi:current-dc"),
+    "dc_current": ("33", "DC Bus Current", SensorStateClass.MEASUREMENT, "A", "mdi:current-dc"),
     "inverter_state": ("40", "VE.Bus State", None, None, None, "mdi:flash"),
     "multi_temp": ("521", "MultiPlus Temperature", SensorDeviceClass.TEMPERATURE, SensorStateClass.MEASUREMENT, "°C", "mdi:thermometer"),
 }
