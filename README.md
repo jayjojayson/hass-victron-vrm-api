@@ -3,7 +3,7 @@
 # Victron-VRM-API
 Victron VRM API Integration for Home Assistant
 
-This integration use the Victron VRM Portal to get Data from the API. At this Time you can read the Data from your Battery and Multiplus. Also you get the Overall Stats for the Day, Week, Month and Year.
+This integration use the Victron VRM Portal to get Data from the API. At this Time you can read the Data from your Battery and MultiPlus. Also you get the Overall Stats for the Day, Week, Month and Year.
 
 If you like the Integration, I would appreciate a star rating ⭐ from you. 🤗
 
@@ -23,7 +23,7 @@ If you like the Integration, I would appreciate a star rating ⭐ from you. 🤗
 - go to `Settings -> Devices and Services -> Integration`
 - click on `Add Integration`
 - search for `victron vrm api` or short `vrm`
-- fill in your Side_ID, Token and Instance_ID for Battery and Multiplus
+- fill in your Side_ID, Token and Instance_ID for Battery and MultiPlus
 
 #
 ### ➡️ Manual
@@ -34,7 +34,7 @@ If you like the Integration, I would appreciate a star rating ⭐ from you. 🤗
 - go to `Settings -> Devices and Services -> Integration`
 - click on `Add Integration`
 - search for `victron vrm api` or short `vrm`
-- fill in your Side_ID, Token and Instance_ID for Battery and Multiplus
+- fill in your Side_ID, Token and Instance_ID for Battery and MultiPlus
 
 [![Downloads](https://img.shields.io/github/downloads/jayjojayson/hass-victron-vrm-api/total?label=downloads&logo=github)](https://github.com/jayjojayson/hass-victron-vrm-api/releases)
 [![Latest release downloads](https://img.shields.io/github/downloads/jayjojayson/hass-victron-vrm-api/latest/total?label=latest%20downloads&logo=github)](https://github.com/jayjojayson/hass-victron-vrm-api/releases/latest)
