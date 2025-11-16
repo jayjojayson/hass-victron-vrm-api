@@ -24,5 +24,3 @@ jobs:
       # NEU: Verwendet die offizielle HA-Action, um Installationsfehler zu vermeiden.
       - name: Run hassfest checks
         uses: home-assistant/actions/hassfest@master 
-
-          
