@@ -7,7 +7,13 @@ This integration use the Victron VRM Portal to get Data from the API. At this Ti
 
 If you like the Integration, I would appreciate a star rating ⭐ from you. 🤗
 
-# 📥 Installing the Integration
+## ✔️ Prerequisites 
+- VRM access token (keep this secret!). Create one in the VRM Portal under Preferences > Integrations > Access tokens or use [this link.](https://vrm.victronenergy.com/access-tokens)
+- your Side_ID
+- Instance Number from Battery and Multiplus
+
+
+## 📥 Installing the Integration
 
 ### ➡️ HACS
 
