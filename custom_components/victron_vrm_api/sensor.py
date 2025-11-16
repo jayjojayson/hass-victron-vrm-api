@@ -32,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # --- 1. VRM Data Coordinator ---------------------------------------------------
-
 class VrmDataCoordinator(DataUpdateCoordinator):
     """Manages the fetching of VRM data for a single endpoint."""
 
@@ -79,9 +78,8 @@ class VrmDataCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Unbekannter Fehler: {err}")
 
 
-# --- 2. Statische Konfigurationen (Zur Reduzierung der Komplexität in async_setup_entry - C901/E501 Fix) ---
+# --- 2. Statische Konfigurationen (Fix für C901/E501) ---
 
-# Battery Summary Sensoren
 BATTERY_SENSORS_CONFIG = {
     "soc": ("51", "State of charge", SensorDeviceClass.BATTERY, SensorStateClass.MEASUREMENT, "%", "mdi:battery-50"),
     "voltage": ("47", "Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
@@ -93,7 +91,6 @@ BATTERY_SENSORS_CONFIG = {
     "max_cell_voltage": ("174", "Maximum Cell Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:battery-high"),
 }
 
-# MultiPlus Status Sensoren
 MULTI_STATUS_SENSORS_CONFIG = {
     "ac_in_voltage": ("8", "AC Input Voltage L1", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:transmission-tower"),
     "ac_in_power": ("17", "AC Input Power L1", SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT, "W", "mdi:transmission-tower"),
@@ -105,7 +102,6 @@ MULTI_STATUS_SENSORS_CONFIG = {
     "multi_temp": ("521", "MultiPlus Temperature", SensorDeviceClass.TEMPERATURE, SensorStateClass.MEASUREMENT, "°C", "mdi:thermometer"),
 }
 
-# Overall Metrics
 OVERALL_PERIODS = ["today", "week", "month", "year"]
 OVERALL_METRICS = {
     "total_solar_yield": ("Solar Yield", SensorDeviceClass.ENERGY, "mdi:solar-power"),
@@ -115,6 +111,16 @@ OVERALL_METRICS = {
 }
 
 # --- 3. Setup-Funktion -----------------------------------------------------------
+
+def _get_device_info(site_id: str, name: str, model: str, suffix: str):
+    """Generates the device info dictionary for an entity group."""
+    return {
+        "identifiers": {(DOMAIN, f"{site_id}{suffix}")},
+        "name": name,
+        "manufacturer": "Victron VRM API",
+        "model": model,
+        "via_device": (DOMAIN, site_id),
+    }
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     """Set up VRM sensors from a config entry."""
@@ -129,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     overall_endpoint = "overallstats"
 
-    # Dynamische Erstellung der Endpoints
+    # Dynamische Erstellung der Endpoints (E501 Fix durch Umbruch)
     battery_endpoint = (
         f"widgets/BatterySummary?instance={battery_instance_id}" 
         if battery_instance_id 
@@ -143,13 +149,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     # Initialisiere Koordinatoren
     battery_summary_coord = VrmDataCoordinator(
-        hass, site_id, token, battery_endpoint, "VRM Battery Summary", DEFAULT_SCAN_INTERVAL_BATTERY
+        hass, site_id, token, battery_endpoint, "VRM Battery Summary", 
+        DEFAULT_SCAN_INTERVAL_BATTERY
     )
     overall_stats_coord = VrmDataCoordinator(
-        hass, site_id, token, overall_endpoint, "VRM Overall Stats", DEFAULT_SCAN_INTERVAL_OVERALL
+        hass, site_id, token, overall_endpoint, "VRM Overall Stats", 
+        DEFAULT_SCAN_INTERVAL_OVERALL
     )
     multi_status_coord = VrmDataCoordinator(
-        hass, site_id, token, multi_status_endpoint, "VRM MultiPlus Status", DEFAULT_SCAN_INTERVAL_MULTI
+        hass, site_id, token, multi_status_endpoint, "VRM MultiPlus Status", 
+        DEFAULT_SCAN_INTERVAL_MULTI
     )
     
     # Initialen Refresh ausführen und Fehler abfangen
@@ -159,39 +168,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         try:
             await coordinator.async_config_entry_first_refresh()
         except UpdateFailed as err:
-            _LOGGER.warning("Initialer Refresh des %s Koordinators fehlgeschlagen: %s", coordinator.name, err)
+            _LOGGER.warning(
+                "Initialer Refresh des %s Koordinators fehlgeschlagen: %s", 
+                coordinator.name, err
+            )
 
     entities: list[SensorEntity] = []
 
-    # Definiere Geräte-Infos für die Gruppierung (E501 Fix durch Umbruch)
-    hub_device_info = {
-        "identifiers": {(DOMAIN, site_id)},
-        "name": f"VRM Site {site_id}",
-        "manufacturer": "Victron VRM API",
-        "model": "VRM Hub",
-    }
-    # F841 Fix: hub_device_info wurde beibehalten, da es für via_device notwendig ist.
-    battery_device_info = {
-        "identifiers": {(DOMAIN, f"{site_id}_battery")},
-        "name": "VRM Battery Summary",
-        "manufacturer": "Victron VRM API",
-        "model": "Battery Summary",
-        "via_device": (DOMAIN, site_id),
-    }
-    multi_device_info = {
-        "identifiers": {(DOMAIN, f"{site_id}_multiplus")},
-        "name": "VRM MultiPlus Status",
-        "manufacturer": "Victron VRM API",
-        "model": "MultiPlus Status",
-        "via_device": (DOMAIN, site_id),
-    }
-    overall_device_info = {
-        "identifiers": {(DOMAIN, f"{site_id}_overall")},
-        "name": "VRM Overall Stats",
-        "manufacturer": "Victron VRM API",
-        "model": "Overall Statistics",
-        "via_device": (DOMAIN, site_id),
-    }
+    # Definiere Geräte-Infos (Verwendung der Hilfsfunktion)
+    battery_device_info = _get_device_info(
+        site_id, "VRM Battery Summary", "Battery Summary", "_battery"
+    )
+    multi_device_info = _get_device_info(
+        site_id, "VRM MultiPlus Status", "MultiPlus Status", "_multiplus"
+    )
+    overall_device_info = _get_device_info(
+        site_id, "VRM Overall Stats", "Overall Statistics", "_overall"
+    )
 
     # --- Entitäten-Erstellung ---
     
