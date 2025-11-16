@@ -1,8 +1,6 @@
 {
   "name": "Victron VRM API",
   "render_readme": true,
-  "zip_release": true,
-  "filename": "victron_vrm_api.zip",
   "homeassistant": "2025.11",
   "content_in_root": false,
   "domains": ["sensor"]
