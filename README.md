@@ -1,7 +1,6 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub release](https://img.shields.io/github/release/jayjojayson/hass-victron-vrm-api?include_prereleases=&sort=semver&color=blue)](https://github.com/jayjojayson/hass-victron-vrm-api/releases/)
-[![Downloads](https://img.shields.io/github/downloads/jayjojayson/hass-victron-vrm-api/total?label=downloads&logo=github&color=blue)](https://github.com/jayjojayson/hass-victron-vrm-api/releases)
 [![GH-code-size](https://img.shields.io/github/languages/code-size/jayjojayson/hass-victron-vrm-api?color=blue)](https://github.com/jayjojayson/hass-victron-vrm-api)
 
 # Victron VRM API
