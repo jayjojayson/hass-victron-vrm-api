@@ -8,10 +8,15 @@ This integration use the Victron VRM Portal to get Data from the API. At this Ti
 If you like the Integration, I would appreciate a star rating ⭐ from you. 🤗
 
 ## ✔️ Prerequisites 
-- VRM access token (keep this secret!). Create one in the VRM Portal under Preferences > Integrations > Access tokens or use [this link.](https://vrm.victronenergy.com/access-tokens)
+- VRM access token (keep this secret!). Create one in the VRM Portal 
+  under Preferences > Integrations > Access tokens or use [this link.](https://vrm.victronenergy.com/access-tokens)
 - your Side_ID
 - Instance Number from Battery and Multiplus
 
+  <details>
+   <summary> <b>"How to" Site_ID, Instance Number, Token</b></summary>  
+   <img width="3161" height="1111" alt="vrm-api-Erklärung" src="https://github.com/user-attachments/assets/042554e5-9585-4098-8ff6-d4c11b017495" />
+  </details>
 
 ## 📥 Installing the Integration
 
