@@ -13,3 +13,4 @@ CONF_MULTI_INSTANCE = "multi_instance_id"     # Instance ID des MultiPlus (Statu
 DEFAULT_SCAN_INTERVAL_BATTERY = 10     # 10 Sekunden
 DEFAULT_SCAN_INTERVAL_MULTI = 10       # 10 Sekunden 
 DEFAULT_SCAN_INTERVAL_OVERALL = 300    # 5 Minuten
+
