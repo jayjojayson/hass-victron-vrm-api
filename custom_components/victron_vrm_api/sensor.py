@@ -109,8 +109,7 @@ OVERALL_METRICS = {
     "grid_history_to": ("Grid Energy Out", SensorDeviceClass.ENERGY, "mdi:home-export-outline"),
 }
 
-# --- 3. Setup-Funktion -----------------------------------------------------------
-
+# --- 3. Hilfsfunktionen ---
 def _get_endpoint(base_name: str, instance_id: int):
     """Helper to generate the instance-specific endpoint string."""
     if instance_id:
@@ -127,6 +126,33 @@ def _get_device_info(site_id: str, name: str, model: str, suffix: str):
         "via_device": (DOMAIN, site_id),
     }
 
+def _add_vrm_entities(site_id, entities, coordinator, config, device_info, sensor_class):
+    """Adds entities based on coordinator data and configuration."""
+    if coordinator.data:
+        for key, (data_id, name, device_class, state_class, unit, icon) in config.items():
+            entities.append(
+                sensor_class(
+                    coordinator, site_id, key, data_id, name, device_class, 
+                    state_class, unit, icon, device_info
+                )
+            )
+
+def _add_overall_entities(site_id, entities, coordinator, device_info):
+    """Adds overall stats entities based on periods and metrics."""
+    if coordinator.data:
+        for period in OVERALL_PERIODS:
+            for metric_key, (metric_name, device_class, icon) in OVERALL_METRICS.items():
+                key = f"{period}_{metric_key}"
+                name = f"{period.capitalize()} {metric_name}"
+                data_path = [period, "totals", metric_key]
+                entities.append(
+                    VrmOverallStatsSensor(
+                        coordinator, site_id, key, data_path, name, device_class,
+                        SensorStateClass.TOTAL_INCREASING, "kWh", icon, device_info
+                    )
+                )
+
+# --- 4. Setup-Funktion (C901 Fix durch Auslagerung) ---
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     """Set up VRM sensors from a config entry."""
 
@@ -137,7 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     battery_instance_id = config_data.get(CONF_BATTERY_INSTANCE, 0)
     multi_instance_id = config_data.get(CONF_MULTI_INSTANCE, 0)
 
-    # Dynamische Endpoints generieren (C901 Fix durch Nutzung der Hilfsfunktion)
+    # Dynamische Endpoints generieren
     battery_endpoint = _get_endpoint("BatterySummary", battery_instance_id)
     multi_status_endpoint = _get_endpoint("Status", multi_instance_id)
     overall_endpoint = "overallstats"
@@ -181,44 +207,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         site_id, "VRM Overall Stats", "Overall Statistics", "_overall"
     )
 
-    # --- Entitäten-Erstellung ---
-    
-    if battery_summary_coord.data:
-        for key, (data_id, name, device_class, state_class, unit, icon) in BATTERY_SENSORS_CONFIG.items():
-            entities.append(
-                VrmBatterySummarySensor(
-                    battery_summary_coord, site_id, key, data_id, name, device_class, 
-                    state_class, unit, icon, battery_device_info
-                )
-            )
-
-    if multi_status_coord.data:
-        for key, (data_id, name, device_class, state_class, unit, icon) in MULTI_STATUS_SENSORS_CONFIG.items():
-            entities.append(
-                VrmMultiStatusSensor(
-                    multi_status_coord, site_id, key, data_id, name, device_class, 
-                    state_class, unit, icon, multi_device_info
-                )
-            )
-
-    if overall_stats_coord.data:
-        for period in OVERALL_PERIODS:
-            for metric_key, (metric_name, device_class, icon) in OVERALL_METRICS.items():
-                key = f"{period}_{metric_key}"
-                name = f"{period.capitalize()} {metric_name}"
-                data_path = [period, "totals", metric_key]
-                entities.append(
-                    VrmOverallStatsSensor(
-                        overall_stats_coord, site_id, key, data_path, name, device_class,
-                        SensorStateClass.TOTAL_INCREASING, "kWh", icon, overall_device_info
-                    )
-                )
+    # Entitäten-Erstellung durch Hilfsfunktionen (C901 Fix)
+    _add_vrm_entities(
+        site_id, entities, battery_summary_coord, BATTERY_SENSORS_CONFIG, 
+        battery_device_info, VrmBatterySummarySensor
+    )
+    _add_vrm_entities(
+        site_id, entities, multi_status_coord, MULTI_STATUS_SENSORS_CONFIG, 
+        multi_device_info, VrmMultiStatusSensor
+    )
+    _add_overall_entities(
+        site_id, entities, overall_stats_coord, overall_device_info
+    )
 
     async_add_entities(entities, True)
 
 
-# --- 4. Basisklasse für Sensoren -------------------------------------------------
-
+# --- 5. Basisklasse für Sensoren -------------------------------------------------
 class VrmBaseSensor(CoordinatorEntity, SensorEntity):
     """Basisklasse für alle VRM Sensoren."""
 
@@ -233,8 +238,7 @@ class VrmBaseSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = device_info
 
 
-# --- 5. Battery Summary Sensor ---------------------------------------------------
-
+# --- 6. Battery Summary Sensor ---------------------------------------------------
 class VrmBatterySummarySensor(VrmBaseSensor):
     """Represents a single value from the VRM Battery Summary data."""
     def __init__(self, coordinator, site_id, key, data_id, name, device_class, state_class, unit, icon, device_info):
@@ -250,8 +254,7 @@ class VrmBatterySummarySensor(VrmBaseSensor):
         return attr.get("valueFloat")
 
 
-# --- 6. Overall Stats Sensor -----------------------------------------------------
-
+# --- 7. Overall Stats Sensor -----------------------------------------------------
 class VrmOverallStatsSensor(VrmBaseSensor):
     """Represents a single value from the VRM Overall Stats data."""
     def __init__(self, coordinator, site_id, key, data_path, name, device_class, state_class, unit, icon, device_info):
@@ -275,8 +278,7 @@ class VrmOverallStatsSensor(VrmBaseSensor):
             return None
             
 
-# --- 7. MultiPlus Status Sensor ----------------------------------------------
-
+# --- 8. MultiPlus Status Sensor ----------------------------------------------
 class VrmMultiStatusSensor(VrmBaseSensor):
     """Represents a single value from the VRM MultiPlus Status data."""
     def __init__(self, coordinator, site_id, key, data_id, name, device_class, state_class, unit, icon, device_info):
