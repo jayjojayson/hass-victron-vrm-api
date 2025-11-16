@@ -9,5 +9,7 @@ env/
 
 hacs.json.tmp
 
-# Ignoriert den generierten Output der Dokumentation
-docs/
+# Dateien und Ordner, die bei Releases ausgeschlossen werden sollen:
+/docs/
+/FUNDING.yml
+/hacs.json
