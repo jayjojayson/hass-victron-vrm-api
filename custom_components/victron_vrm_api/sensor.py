@@ -78,8 +78,7 @@ class VrmDataCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Unbekannter Fehler: {err}")
 
 
-# --- 2. Statische Konfigurationen (Fix für C901/E501) ---
-
+# --- 2. Statische Konfigurationen ---
 BATTERY_SENSORS_CONFIG = {
     "soc": ("51", "State of charge", SensorDeviceClass.BATTERY, SensorStateClass.MEASUREMENT, "%", "mdi:battery-50"),
     "voltage": ("47", "Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
@@ -112,8 +111,14 @@ OVERALL_METRICS = {
 
 # --- 3. Setup-Funktion -----------------------------------------------------------
 
+def _get_endpoint(base_name: str, instance_id: int):
+    """Helper to generate the instance-specific endpoint string."""
+    if instance_id:
+        return f"widgets/{base_name}?instance={instance_id}" 
+    return f"widgets/{base_name}"
+
 def _get_device_info(site_id: str, name: str, model: str, suffix: str):
-    """Generates the device info dictionary for an entity group."""
+    """Generates the device info dictionary for an entity group (E501 Fix)."""
     return {
         "identifiers": {(DOMAIN, f"{site_id}{suffix}")},
         "name": name,
@@ -127,25 +132,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     config_data = hass.data[DOMAIN][entry.entry_id]
 
-    # Daten aus der Config extrahieren
     site_id = config_data[CONF_SITE_ID]
     token = config_data[CONF_TOKEN]
     battery_instance_id = config_data.get(CONF_BATTERY_INSTANCE, 0)
     multi_instance_id = config_data.get(CONF_MULTI_INSTANCE, 0)
 
+    # Dynamische Endpoints generieren (C901 Fix durch Nutzung der Hilfsfunktion)
+    battery_endpoint = _get_endpoint("BatterySummary", battery_instance_id)
+    multi_status_endpoint = _get_endpoint("Status", multi_instance_id)
     overall_endpoint = "overallstats"
-
-    # Dynamische Erstellung der Endpoints (E501 Fix durch Umbruch)
-    battery_endpoint = (
-        f"widgets/BatterySummary?instance={battery_instance_id}" 
-        if battery_instance_id 
-        else "widgets/BatterySummary"
-    )
-    multi_status_endpoint = (
-        f"widgets/Status?instance={multi_instance_id}" 
-        if multi_instance_id 
-        else "widgets/Status"
-    )
 
     # Initialisiere Koordinatoren
     battery_summary_coord = VrmDataCoordinator(
@@ -161,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         DEFAULT_SCAN_INTERVAL_MULTI
     )
     
-    # Initialen Refresh ausführen und Fehler abfangen
+    # Initialen Refresh
     coordinators = [battery_summary_coord, overall_stats_coord, multi_status_coord]
     
     for coordinator in coordinators:
@@ -175,7 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     entities: list[SensorEntity] = []
 
-    # Definiere Geräte-Infos (Verwendung der Hilfsfunktion)
+    # Definiere Geräte-Infos
     battery_device_info = _get_device_info(
         site_id, "VRM Battery Summary", "Battery Summary", "_battery"
     )
