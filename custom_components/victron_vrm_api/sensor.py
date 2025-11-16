@@ -80,25 +80,39 @@ class VrmDataCoordinator(DataUpdateCoordinator):
 
 # --- 2. Statische Konfigurationen ----------------------------------------------
 BATTERY_SENSORS_CONFIG = {
-    "soc": ("51", "State of charge", SensorDeviceClass.BATTERY, SensorStateClass.MEASUREMENT, "%", "mdi:battery-50"),
-    "voltage": ("47", "Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
-    "current": ("49", "Current", SensorDeviceClass.CURRENT, SensorStateClass.MEASUREMENT, "A", "mdi:current-dc"),
-    "consumed": ("50", "Consumed Amphours", None, SensorStateClass.TOTAL_INCREASING, "Ah", "mdi:battery-alert-variant-outline"),
+    "soc": ("51", "State of charge", SensorDeviceClass.BATTERY,
+            SensorStateClass.MEASUREMENT, "%", "mdi:battery-50"),
+    "voltage": ("47", "Voltage", SensorDeviceClass.VOLTAGE,
+                SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
+    "current": ("49", "Current", SensorDeviceClass.CURRENT,
+                SensorStateClass.MEASUREMENT, "A", "mdi:current-dc"),
+    "consumed": ("50", "Consumed Amphours", None,
+                 SensorStateClass.TOTAL_INCREASING, "Ah", "mdi:battery-alert-variant-outline"),
     "ttg": ("52", "Time to go", None, SensorStateClass.MEASUREMENT, "h", "mdi:timer-sand"),
-    "temp": ("115", "Battery temperature", SensorDeviceClass.TEMPERATURE, SensorStateClass.MEASUREMENT, "°C", "mdi:thermometer"),
-    "min_cell_voltage": ("173", "Minimum Cell Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:battery-low"),
-    "max_cell_voltage": ("174", "Maximum Cell Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:battery-high"),
+    "temp": ("115", "Battery temperature", SensorDeviceClass.TEMPERATURE,
+             SensorStateClass.MEASUREMENT, "°C", "mdi:thermometer"),
+    "min_cell_voltage": ("173", "Minimum Cell Voltage", SensorDeviceClass.VOLTAGE,
+                         SensorStateClass.MEASUREMENT, "V", "mdi:battery-low"),
+    "max_cell_voltage": ("174", "Maximum Cell Voltage", SensorDeviceClass.VOLTAGE,
+                         SensorStateClass.MEASUREMENT, "V", "mdi:battery-high"),
 }
 
 MULTI_STATUS_SENSORS_CONFIG = {
-    "ac_in_voltage": ("8", "AC Input Voltage L1", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:transmission-tower"),
-    "ac_in_power": ("17", "AC Input Power L1", SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT, "W", "mdi:transmission-tower"),
-    "ac_out_voltage": ("20", "AC Output Voltage L1", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:power-socket-eu"),
-    "ac_out_power": ("29", "AC Output Power L1", SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT, "W", "mdi:power-socket-eu"),
-    "dc_voltage": ("32", "DC Bus Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
-    "dc_current": ("33", "DC Bus Current", SensorStateClass.MEASUREMENT, "A", "mdi:current-dc"),
+    "ac_in_voltage": ("8", "AC Input Voltage L1", SensorDeviceClass.VOLTAGE,
+                      SensorStateClass.MEASUREMENT, "V", "mdi:transmission-tower"),
+    "ac_in_power": ("17", "AC Input Power L1", SensorDeviceClass.POWER,
+                    SensorStateClass.MEASUREMENT, "W", "mdi:transmission-tower"),
+    "ac_out_voltage": ("20", "AC Output Voltage L1", SensorDeviceClass.VOLTAGE,
+                       SensorStateClass.MEASUREMENT, "V", "mdi:power-socket-eu"),
+    "ac_out_power": ("29", "AC Output Power L1", SensorDeviceClass.POWER,
+                     SensorStateClass.MEASUREMENT, "W", "mdi:power-socket-eu"),
+    "dc_voltage": ("32", "DC Bus Voltage", SensorDeviceClass.VOLTAGE,
+                   SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
+    "dc_current": ("33", "DC Bus Current", SensorDeviceClass.CURRENT,
+                   SensorStateClass.MEASUREMENT, "A", "mdi:current-dc"),
     "inverter_state": ("40", "VE.Bus State", None, None, None, "mdi:flash"),
-    "multi_temp": ("521", "MultiPlus Temperature", SensorDeviceClass.TEMPERATURE, SensorStateClass.MEASUREMENT, "°C", "mdi:thermometer"),
+    "multi_temp": ("521", "MultiPlus Temperature", SensorDeviceClass.TEMPERATURE,
+                   SensorStateClass.MEASUREMENT, "°C", "mdi:thermometer"),
 }
 
 OVERALL_PERIODS = ["today", "week", "month", "year"]
