@@ -1,10 +1,10 @@
-name: Validate with hassfest and HACS # WICHTIG: Name muss für das Badge übereinstimmen
+name: Validate with hassfest and HACS 
 
 on:
   push:
-    branches: [ main ] # Führt den Workflow bei jedem Push auf den Hauptbranch aus
+    branches: [ main ] 
   pull_request:
-    branches: [ main ] # Führt den Workflow bei jedem Pull Request auf den Hauptbranch aus
+    branches: [ main ]
 
 jobs:
   validate:
@@ -14,33 +14,31 @@ jobs:
         uses: actions/checkout@v4
 
       # 1. HACS-Validierung
-      # Prüft die hacs.json, die Dateistruktur und die Einhaltung der HACS-Regeln
+      # Prüft hacs.json und Struktur
       - name: Run HACS validation
         uses: hacs/action@main
         with:
-          category: integration # Wichtig: Sagt HACS, dass es eine Integration ist
+          category: integration 
 
-      # 2. Setup Python für Hassfest
-      - name: Setup Python
+      # 2. Hassfest-Prüfungen
+      # NEU: Verwendet die offizielle HA-Action, um Installationsfehler zu vermeiden.
+      - name: Run hassfest checks
+        uses: home-assistant/actions/hassfest@master 
+
+      # 3. Setup Python für Linting (Code-Stilprüfung)
+      - name: Setup Python for Linting
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12' 
+          python-version: '3.12'
 
-      # 3. Installation von Hassfest
-      - name: Install hassfest
-        run: pip install hassfest
-
-      # 4. Ausführung von Hassfest
-      # Prüft die manifest.json und die Konformität mit Home Assistant
-      - name: Run hassfest checks
-        run: python3 -m hassfest
-
-      # 5. Linting (Stilprüfung, optional aber empfohlen)
-      # Stellt sicher, dass Ihr Code sauber und gut formatiert ist.
+      # 4. Abhängigkeiten für Linting installieren
       - name: Install code style dependencies
         run: pip install flake8
 
+      # 5. Linting ausführen
       - name: Lint with flake8
         run: |
           # Allgemeine Stilprüfung für den Code
+          # Stellt sicher, dass die custom_components/ Ordner sauber sind.
           flake8 custom_components/ --count --max-complexity=10 --max-line-length=120 --statistics
+          
