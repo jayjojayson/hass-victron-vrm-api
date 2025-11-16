@@ -1,4 +1,3 @@
-# flake8: noqa: E501, W291, W292, W293, W391, E261, E302
 """Platform for sensor entities from Victron VRM."""
 import logging
 from datetime import timedelta
@@ -61,15 +60,15 @@ class VrmDataCoordinator(DataUpdateCoordinator):
                     if response.status not in (200, 204):
                         _LOGGER.error("API-Fehler bei %s: Status %d", self.endpoint, response.status)
                         raise UpdateFailed(f"API-Fehler bei {self.endpoint}: Status {response.status}")
-                    
+
                     if response.status == 204:
-                        return None 
+                        return None
 
                     data = await response.json()
 
                     if "records" in data:
                         return data.get("records", {})
-                    return data 
+                    return data
 
         except aiohttp.ClientError as err:
             _LOGGER.error("Verbindungsfehler beim Abrufen der Daten für %s: %s", self.endpoint, err)
@@ -120,7 +119,7 @@ def _get_endpoint(base_name: str, instance_id: int):
 
 
 def _get_device_info(site_id: str, name: str, model: str, suffix: str):
-    """Generates the device info dictionary for an entity group (E501 Fix)."""
+    """Generates the device info dictionary for an entity group."""
     return {
         "identifiers": {(DOMAIN, f"{site_id}{suffix}")},
         "name": name,
@@ -187,10 +186,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         hass, site_id, token, multi_status_endpoint, "VRM MultiPlus Status",
         DEFAULT_SCAN_INTERVAL_MULTI
     )
-    
+
     # Initialen Refresh
     coordinators = [battery_summary_coord, overall_stats_coord, multi_status_coord]
-    
+
     for coordinator in coordinators:
         try:
             await coordinator.async_config_entry_first_refresh()
@@ -251,7 +250,7 @@ class VrmBatterySummarySensor(VrmBaseSensor):
     def __init__(self, coordinator, site_id, key, data_id, name, device_class, state_class, unit, icon, device_info):
         super().__init__(coordinator, site_id, key, name, device_class, state_class, unit, icon, device_info)
         self._data_id = data_id
-    
+
     @property
     def native_value(self):
         if not self.coordinator.data:
@@ -268,7 +267,7 @@ class VrmOverallStatsSensor(VrmBaseSensor):
     def __init__(self, coordinator, site_id, key, data_path, name, device_class, state_class, unit, icon, device_info):
         super().__init__(coordinator, site_id, key, name, device_class, state_class, unit, icon, device_info)
         self._data_path = data_path
-    
+
     @property
     def native_value(self):
         if not self.coordinator.data:
@@ -284,7 +283,7 @@ class VrmOverallStatsSensor(VrmBaseSensor):
             return None
         except (KeyError, TypeError, ValueError):
             return None
-            
+
 
 # --- 8. MultiPlus Status Sensor ----------------------------------------------
 class VrmMultiStatusSensor(VrmBaseSensor):
