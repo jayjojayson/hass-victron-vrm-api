@@ -78,7 +78,7 @@ class VrmDataCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Unbekannter Fehler: {err}")
 
 
-# --- 2. Statische Konfigurationen ---
+# --- 2. Statische Konfigurationen ----------------------------------------------
 BATTERY_SENSORS_CONFIG = {
     "soc": ("51", "State of charge", SensorDeviceClass.BATTERY, SensorStateClass.MEASUREMENT, "%", "mdi:battery-50"),
     "voltage": ("47", "Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
@@ -109,12 +109,14 @@ OVERALL_METRICS = {
     "grid_history_to": ("Grid Energy Out", SensorDeviceClass.ENERGY, "mdi:home-export-outline"),
 }
 
-# --- 3. Hilfsfunktionen ---
+
+# --- 3. Hilfsfunktionen --------------------------------------------------------
 def _get_endpoint(base_name: str, instance_id: int):
     """Helper to generate the instance-specific endpoint string."""
     if instance_id:
-        return f"widgets/{base_name}?instance={instance_id}" 
+        return f"widgets/{base_name}?instance={instance_id}"
     return f"widgets/{base_name}"
+
 
 def _get_device_info(site_id: str, name: str, model: str, suffix: str):
     """Generates the device info dictionary for an entity group (E501 Fix)."""
@@ -126,16 +128,18 @@ def _get_device_info(site_id: str, name: str, model: str, suffix: str):
         "via_device": (DOMAIN, site_id),
     }
 
+
 def _add_vrm_entities(site_id, entities, coordinator, config, device_info, sensor_class):
     """Adds entities based on coordinator data and configuration."""
     if coordinator.data:
         for key, (data_id, name, device_class, state_class, unit, icon) in config.items():
             entities.append(
                 sensor_class(
-                    coordinator, site_id, key, data_id, name, device_class, 
+                    coordinator, site_id, key, data_id, name, device_class,
                     state_class, unit, icon, device_info
                 )
             )
+
 
 def _add_overall_entities(site_id, entities, coordinator, device_info):
     """Adds overall stats entities based on periods and metrics."""
@@ -152,7 +156,8 @@ def _add_overall_entities(site_id, entities, coordinator, device_info):
                     )
                 )
 
-# --- 4. Setup-Funktion (C901 Fix durch Auslagerung) ---
+
+# --- 4. Setup-Funktion (C901 Fix durch Auslagerung) ----------------------------
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     """Set up VRM sensors from a config entry."""
 
@@ -170,15 +175,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     # Initialisiere Koordinatoren
     battery_summary_coord = VrmDataCoordinator(
-        hass, site_id, token, battery_endpoint, "VRM Battery Summary", 
+        hass, site_id, token, battery_endpoint, "VRM Battery Summary",
         DEFAULT_SCAN_INTERVAL_BATTERY
     )
     overall_stats_coord = VrmDataCoordinator(
-        hass, site_id, token, overall_endpoint, "VRM Overall Stats", 
+        hass, site_id, token, overall_endpoint, "VRM Overall Stats",
         DEFAULT_SCAN_INTERVAL_OVERALL
     )
     multi_status_coord = VrmDataCoordinator(
-        hass, site_id, token, multi_status_endpoint, "VRM MultiPlus Status", 
+        hass, site_id, token, multi_status_endpoint, "VRM MultiPlus Status",
         DEFAULT_SCAN_INTERVAL_MULTI
     )
     
@@ -190,7 +195,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             await coordinator.async_config_entry_first_refresh()
         except UpdateFailed as err:
             _LOGGER.warning(
-                "Initialer Refresh des %s Koordinators fehlgeschlagen: %s", 
+                "Initialer Refresh des %s Koordinators fehlgeschlagen: %s",
                 coordinator.name, err
             )
 
@@ -207,13 +212,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         site_id, "VRM Overall Stats", "Overall Statistics", "_overall"
     )
 
-    # Entitäten-Erstellung durch Hilfsfunktionen (C901 Fix)
+    # Entitäten-Erstellung durch Hilfsfunktionen
     _add_vrm_entities(
-        site_id, entities, battery_summary_coord, BATTERY_SENSORS_CONFIG, 
+        site_id, entities, battery_summary_coord, BATTERY_SENSORS_CONFIG,
         battery_device_info, VrmBatterySummarySensor
     )
     _add_vrm_entities(
-        site_id, entities, multi_status_coord, MULTI_STATUS_SENSORS_CONFIG, 
+        site_id, entities, multi_status_coord, MULTI_STATUS_SENSORS_CONFIG,
         multi_device_info, VrmMultiStatusSensor
     )
     _add_overall_entities(
@@ -241,6 +246,7 @@ class VrmBaseSensor(CoordinatorEntity, SensorEntity):
 # --- 6. Battery Summary Sensor ---------------------------------------------------
 class VrmBatterySummarySensor(VrmBaseSensor):
     """Represents a single value from the VRM Battery Summary data."""
+
     def __init__(self, coordinator, site_id, key, data_id, name, device_class, state_class, unit, icon, device_info):
         super().__init__(coordinator, site_id, key, name, device_class, state_class, unit, icon, device_info)
         self._data_id = data_id
@@ -257,6 +263,7 @@ class VrmBatterySummarySensor(VrmBaseSensor):
 # --- 7. Overall Stats Sensor -----------------------------------------------------
 class VrmOverallStatsSensor(VrmBaseSensor):
     """Represents a single value from the VRM Overall Stats data."""
+
     def __init__(self, coordinator, site_id, key, data_path, name, device_class, state_class, unit, icon, device_info):
         super().__init__(coordinator, site_id, key, name, device_class, state_class, unit, icon, device_info)
         self._data_path = data_path
@@ -281,10 +288,11 @@ class VrmOverallStatsSensor(VrmBaseSensor):
 # --- 8. MultiPlus Status Sensor ----------------------------------------------
 class VrmMultiStatusSensor(VrmBaseSensor):
     """Represents a single value from the VRM MultiPlus Status data."""
+
     def __init__(self, coordinator, site_id, key, data_id, name, device_class, state_class, unit, icon, device_info):
         super().__init__(coordinator, site_id, key, name, device_class, state_class, unit, icon, device_info)
         self._data_id = data_id
-    
+
     @property
     def native_value(self):
         if not self.coordinator.data:
