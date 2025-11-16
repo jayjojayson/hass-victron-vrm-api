@@ -1,4 +1,4 @@
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
 # Victron-VRM-API
 Victron VRM API Integration for Home Assistant
@@ -29,3 +29,6 @@ If you like the Integration, I would appreciate a star rating ⭐ from you. 🤗
 - click on `Add Integration`
 - search for `victron vrm api` or short `vrm`
 - fill in your Side_ID, Token and Instance_ID for Battery and Multiplus
+
+[![Downloads](https://img.shields.io/github/downloads/jayjojayson/hass-victron-vrm-api/total?label=downloads&logo=github)](https://github.com/jayjojayson/hass-victron-vrm-api/releases)
+[![Latest release downloads](https://img.shields.io/github/downloads/jayjojayson/hass-victron-vrm-api/latest/total?label=latest%20downloads&logo=github)](https://github.com/jayjojayson/hass-victron-vrm-api/releases/latest)
