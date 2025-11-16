@@ -1,48 +1,16 @@
-name: Validate with hassfest and HACS # WICHTIG: Name muss für das Badge übereinstimmen
-
-on:
-  push:
-    branches: [ main ] # Führt den Workflow bei jedem Push auf den Hauptbranch aus
-  pull_request:
-    branches: [ main ] # Führt den Workflow bei jedem Pull Request auf den Hauptbranch aus
-
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # 1. HACS-Validierung
-      # Prüft die hacs.json, die Dateistruktur und die Einhaltung der HACS-Regeln
-      - name: Run HACS validation
-        uses: hacs/action@main
-        with:
-          category: integration # Wichtig: Sagt HACS, dass es eine Integration ist
-
-      # 2. Setup Python für Hassfest
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12' 
-
-      # 3. Installation von Hassfest
-      - name: Install hassfest
-        run: pip install hassfest
-
-      # 4. Ausführung von Hassfest
-      # Prüft die manifest.json und die Konformität mit Home Assistant
-      - name: Run hassfest checks
-        run: python3 -m hassfest
-
-      # 5. Linting (Stilprüfung, optional aber empfohlen)
-      # Stellt sicher, dass Ihr Code sauber und gut formatiert ist.
-      - name: Install code style dependencies
-        run: pip install flake8
-
-      - name: Lint with flake8
-        run: |
-          # Allgemeine Stilprüfung für den Code
-          
-          flake8 custom_components/ --count --max-complexity=10 --max-line-length=120 --statistics
+            - name: HACS Action
+  # You may pin to the exact commit or the version.
+  # uses: hacs/action@d556e736723344f83838d08488c983a15381059a
+  uses: hacs/action@22.5.0
+  with:
+    # A space seperated list of ignored checks, for valid entries see README.md
+    ignore: # optional, default is 
+    # The category of repository
+    category: 
+    # The full name of repository
+    repository: # optional
+    # Post a comment to the PR with the result of the checks
+    comment: # optional, default is true
+    # Personal access token (PAT)
+    github_token: # optional, default is ${{ github.token }}
           
