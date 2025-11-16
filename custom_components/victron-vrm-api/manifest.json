@@ -1,5 +1,5 @@
 {
-  "domain": "victron-vrm-api",
+  "domain": "victron_vrm_api",
   "name": "Victron VRM API",
   "version": "1.0", 
   "config_flow": true,
