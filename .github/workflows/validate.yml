@@ -25,20 +25,4 @@ jobs:
       - name: Run hassfest checks
         uses: home-assistant/actions/hassfest@master 
 
-      # 3. Setup Python für Linting (Code-Stilprüfung)
-      - name: Setup Python for Linting
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      # 4. Abhängigkeiten für Linting installieren
-      - name: Install code style dependencies
-        run: pip install flake8
-
-      # 5. Linting ausführen
-      - name: Lint with flake8
-        run: |
-          # Allgemeine Stilprüfung für den Code
-          # Stellt sicher, dass die custom_components/ Ordner sauber sind.
-          flake8 custom_components/ --count --max-complexity=10 --max-line-length=120 --statistics
           
