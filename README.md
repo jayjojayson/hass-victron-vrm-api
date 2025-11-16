@@ -1,4 +1,8 @@
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![GitHub release](https://img.shields.io/github/release/jayjojayson/hass-victron-vrm-api?include_prereleases=&sort=semver&color=blue)](https://github.com/jayjojayson/hass-victron-vrm-api/releases/)
+[![Downloads](https://img.shields.io/github/downloads/jayjojayson/hass-victron-vrm-api/total?label=downloads&logo=github)](https://github.com/jayjojayson/hass-victron-vrm-api/releases)
+[![GH-code-size](https://img.shields.io/github/languages/code-size/jayjojayson/hass-victron-vrm-api?color=red)](https://github.com/jayjojayson/hass-victron-vrm-api)
 
 # Victron-VRM-API
 Victron VRM API Integration for Home Assistant
@@ -44,5 +48,3 @@ If you like the Integration, I would appreciate a star rating ⭐ from you. 🤗
 
 <img width="1084" height="513" alt="baaf71fc1a0bd487e77f43b7fb7b184def05f512" src="https://github.com/user-attachments/assets/f0219972-1b75-476b-ad58-1a8cd7bb6816" />
 
-[![Downloads](https://img.shields.io/github/downloads/jayjojayson/hass-victron-vrm-api/total?label=downloads&logo=github)](https://github.com/jayjojayson/hass-victron-vrm-api/releases)
-[![Latest release downloads](https://img.shields.io/github/downloads/jayjojayson/hass-victron-vrm-api/latest/total?label=latest%20downloads&logo=github)](https://github.com/jayjojayson/hass-victron-vrm-api/releases/latest)
