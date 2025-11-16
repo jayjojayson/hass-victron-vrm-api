@@ -1,7 +1,7 @@
 """Constants for the VRM Victron Energy integration."""
 
 # Die Domäne (muss mit dem Ordnernamen übereinstimmen)
-DOMAIN = "victron-vrm-api"
+DOMAIN = "victron_vrm_api"
 
 # Konfigurationsschlüssel
 CONF_SITE_ID = "site_id"
