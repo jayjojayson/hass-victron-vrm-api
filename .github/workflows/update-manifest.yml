@@ -1,7 +1,7 @@
 name: Update Manifest Version from Git Tag (Victron VRM)
 
 on:
-  # 1. Trigger: Führt den Workflow aus, wenn ein neuer Tag erstellt wird, der mit 'v_' beginnt
+  # Führt den Workflow aus, wenn ein neuer Tag erstellt wird, der mit 'v_' beginnt
   push:
     tags:
       - 'v_*'
@@ -10,6 +10,10 @@ on:
 jobs:
   update_version:
     runs-on: ubuntu-latest
+    
+    # NEU: Setzt die Berechtigungen, um den Push zu erlauben
+    permissions:
+      contents: write
 
     steps:
       # 1. Repository auschecken
@@ -20,32 +24,24 @@ jobs:
       - name: Extract and Clean Version from Git Tag
         id: get_tag_version
         run: |
-          # ${{ github.ref_name }} enthält den vollen Tag-Namen (z.B. "v_1.2")
           TAG_VERSION=${{ github.ref_name }}
-          
           # Entfernt das 'v_' am Anfang des Tags (z.B. v_1.2 wird zu 1.2)
           CLEAN_VERSION=$(echo "$TAG_VERSION" | sed 's/^v_//') 
           
           echo "CURRENT_VERSION=${CLEAN_VERSION}" >> $GITHUB_ENV
-          echo "Extracted Tag Version: ${{ env.CURRENT_VERSION }}" # Wird 1.2
 
-      # 3. Manifest.json aktualisieren (Pfad: custom_components/victron_vrm_api/manifest.json)
+      # 3. Manifest.json aktualisieren
       - name: Update manifest.json with new version
         run: |
-          # Definieren Sie den Pfad zur manifest.json
           MANIFEST_PATH=custom_components/victron_vrm_api/manifest.json
-          
-          # Ersetze die Versionszeile im spezifischen Pfad. 
-          # Wir verwenden '@' als Trennzeichen im sed-Befehl.
+          # Ersetze die Versionszeile
           sed -i 's@"version": ".*"@"version": "${{ env.CURRENT_VERSION }}"@g' "$MANIFEST_PATH"
-          
-          echo "Die Version in $MANIFEST_PATH wurde auf ${{ env.CURRENT_VERSION }} aktualisiert."
 
-      # 4. Aktualisierte Datei committen und pushen
+      # 4. Aktualisierte Datei committen und pushen (Syntax korrigiert)
       - name: Commit and Push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: '⚙️ CI: Update version in manifest.json to ${{ env.CURRENT_VERSION }}'
-          # WICHTIG: Korrekter Dateipfad für den Commit
-          files: custom_components/victron_vrm_api/manifest.json 
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # NEU: Die zu commitenden Dateien werden über 'file_pattern' angegeben
+          file_pattern: custom_components/victron_vrm_api/manifest.json 
+          # Das 'token' Input wird entfernt, da wir die Permissions oben gesetzt haben.
