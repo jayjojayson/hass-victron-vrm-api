@@ -11,8 +11,6 @@ Diese Integration nutzt das Victron VRM-Portal, um Daten von der API abzurufen. 
 
 Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung ⭐ freuen. 🤗
 
----
-
 ## ✔️ Voraussetzungen
 - VRM-Zugriffstoken (bitte geheim halten!). Erstelle eines im VRM-Portal unter Einstellungen > Integrationen > Zugriffstoken oder verwende [diesen Link](https://vrm.victronenergy.com/access-tokens).
 - Deine Side_ID
@@ -22,8 +20,6 @@ Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung �
    <summary> <b>"How to" Site_ID, Instanz Nummer, Token</b></summary>  
    <img width="3161" height="1111" alt="vrm-api-Erklärung" src="https://github.com/user-attachments/assets/042554e5-9585-4098-8ff6-d4c11b017495" />
   </details>
-
----
 
 ## 📥 Installation der Integration
 
@@ -46,8 +42,6 @@ Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung �
 - Klicke auf `Integration hinzufügen`.
 - Suche nach `victron vrm api` oder kurz `vrm`.
 - Gebe deine Side_ID, dein Token und deine Instance_ID für Battery und MultiPlus ein.
-
----
 
 ## ✅ So sollte es aussehen in HA
 
