@@ -163,6 +163,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         "min_cell_voltage": ("173", "Minimum Cell Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:battery-low"),
         "max_cell_voltage": ("174", "Maximum Cell Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:battery-high"),
     }
+    
+    # NEU: Definition des berechneten Power-Sensors
+    power_sensor_key = "power"
+    power_sensor_name = "Battery Power"
 
     # WICHTIG: Nur Entitäten hinzufügen, wenn der Coordinator Daten hat (Robustheit)
     if battery_summary_coord.data:
@@ -172,6 +176,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     battery_summary_coord, site_id, key, data_id, name, device_class, state_class, unit, icon, battery_device_info
                 )
             )
+        
+        # NEU: Füge den berechneten Power-Sensor hinzu
+        entities.append(
+            VrmBatteryPowerSensor(
+                battery_summary_coord, site_id, power_sensor_key, power_sensor_name, battery_device_info
+            )
+        )
 
     # --- MultiPlus Status Sensoren --------------------------------------------
     multi_status_sensors_config = {
@@ -185,6 +196,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         "multi_temp": ("521", "MultiPlus Temperature", SensorDeviceClass.TEMPERATURE, SensorStateClass.MEASUREMENT, "°C", "mdi:thermometer"),
     }
     
+    # NEU: Definition des berechneten Power-Sensors für MultiPlus DC
+    multi_dc_power_key = "dc_power"
+    multi_dc_power_name = "DC Bus Power"
+
     # WICHTIG: Nur Entitäten hinzufügen, wenn der Coordinator Daten hat (Robustheit)
     if multi_status_coord.data:
         for key, (data_id, name, device_class, state_class, unit, icon) in multi_status_sensors_config.items():
@@ -193,6 +208,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     multi_status_coord, site_id, key, data_id, name, device_class, state_class, unit, icon, multi_device_info
                 )
             )
+
+        # NEU: Füge den berechneten MultiPlus DC Power Sensor hinzu
+        entities.append(
+            VrmMultiPlusDCPowerSensor(
+                multi_status_coord, site_id, multi_dc_power_key, multi_dc_power_name, multi_device_info
+            )
+        )
 
     # --- Overall Stats Sensoren --------------------------------------------------
     periods = ["today", "week", "month", "year"]
@@ -248,6 +270,108 @@ class VrmBatterySummarySensor(VrmBaseSensor):
         data = self.coordinator.data.get("data", {})
         attr = data.get(self._data_id, {})
         return attr.get("valueFloat")
+
+# --- 4.5. Calculated Battery Power Sensor (ANGEPASST) --------------------------------------
+class VrmBatteryPowerSensor(VrmBaseSensor):
+    """Calculates Battery Power (Voltage * Current) from Battery Summary data."""
+    
+    # ID's für Spannung (47) und Strom (49)
+    VOLTAGE_DATA_ID = "47"
+    CURRENT_DATA_ID = "49"
+
+    def __init__(self, coordinator, site_id, key, name, device_info):
+        """Initialisiert den berechneten Power Sensor."""
+        super().__init__(
+            coordinator,
+            site_id,
+            key,
+            name,
+            SensorDeviceClass.POWER,
+            SensorStateClass.MEASUREMENT,
+            "W", # Einheit ist Watt (V * A)
+            None, # Icon wird durch die DeviceClass (POWER) automatisch gesetzt
+            device_info
+        )
+
+    @property
+    def native_value(self) -> float: # Rückgabetyp auf float geändert
+        """Berechnet den Leistungswert aus Spannung und Strom."""
+        if not self.coordinator.data:
+            return 0.0 # Korrektur: 0.0 statt None
+            
+        data = self.coordinator.data.get("data", {})
+        
+        # Abrufen der Spannung und Konvertierung
+        voltage_attr = data.get(self.VOLTAGE_DATA_ID, {})
+        voltage = voltage_attr.get("valueFloat")
+        
+        # Abrufen des Stroms und Konvertierung
+        current_attr = data.get(self.CURRENT_DATA_ID, {})
+        current = current_attr.get("valueFloat")
+
+        # Überprüfung und Berechnung
+        if voltage is None or current is None:
+            _LOGGER.debug("Fehlende Daten für Batterie-Power-Berechnung (Voltage: %s, Current: %s). Rückgabe 0.0.", voltage, current)
+            return 0.0 # Korrektur: 0.0 statt None
+            
+        try:
+            # Leistung P = U * I
+            power = voltage * current
+            return round(power, 2) 
+        except (TypeError, ValueError) as err:
+            _LOGGER.error("Fehler bei der Power-Berechnung: %s. Rückgabe 0.0.", err)
+            return 0.0 # Korrektur: 0.0 statt None
+
+# --- 4.6. Calculated MultiPlus DC Power Sensor (ANGEPASST) --------------------------------------
+class VrmMultiPlusDCPowerSensor(VrmBaseSensor):
+    """Calculates MultiPlus DC Power (Voltage * Current) from Multi Status data."""
+    
+    # ID's für DC-Spannung (32) und DC-Strom (33)
+    VOLTAGE_DATA_ID = "32"
+    CURRENT_DATA_ID = "33"
+
+    def __init__(self, coordinator, site_id, key, name, device_info):
+        """Initialisiert den berechneten Power Sensor."""
+        super().__init__(
+            coordinator,
+            site_id,
+            key,
+            name,
+            SensorDeviceClass.POWER,
+            SensorStateClass.MEASUREMENT,
+            "W", # Einheit ist Watt (V * A)
+            None, # Icon wird durch die DeviceClass (POWER) automatisch gesetzt
+            device_info
+        )
+
+    @property
+    def native_value(self) -> float: # Rückgabetyp auf float geändert
+        """Berechnet den Leistungswert aus DC-Spannung und DC-Strom des MultiPlus."""
+        if not self.coordinator.data:
+            return 0.0 # Korrektur: 0.0 statt None
+            
+        data = self.coordinator.data.get("data", {})
+        
+        # Abrufen der Spannung
+        voltage_attr = data.get(self.VOLTAGE_DATA_ID, {})
+        voltage = voltage_attr.get("valueFloat")
+        
+        # Abrufen des Stroms
+        current_attr = data.get(self.CURRENT_DATA_ID, {})
+        current = current_attr.get("valueFloat")
+
+        # Überprüfung und Berechnung
+        if voltage is None or current is None:
+            _LOGGER.debug("Fehlende Daten für MultiPlus DC Power Berechnung (Voltage: %s, Current: %s). Rückgabe 0.0.", voltage, current)
+            return 0.0 # Korrektur: 0.0 statt None
+            
+        try:
+            # Leistung P = U * I
+            power = voltage * current
+            return round(power, 2) 
+        except (TypeError, ValueError) as err:
+            _LOGGER.error("Fehler bei der MultiPlus DC Power-Berechnung: %s. Rückgabe 0.0.", err)
+            return 0.0 # Korrektur: 0.0 statt None
 
 # --- 5. Overall Stats Sensor -----------------------------------------------------
 class VrmOverallStatsSensor(VrmBaseSensor):
