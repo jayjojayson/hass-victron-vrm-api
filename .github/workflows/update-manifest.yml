@@ -1,0 +1,51 @@
+name: Update Manifest Version from Git Tag (Victron VRM)
+
+on:
+  # 1. Trigger: Führt den Workflow aus, wenn ein neuer Tag erstellt wird, der mit 'v_' beginnt
+  push:
+    tags:
+      - 'v_*'
+  workflow_dispatch:
+
+jobs:
+  update_version:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Repository auschecken
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Versionsnummer aus dem Git-Tag extrahieren und das Präfix 'v_' entfernen
+      - name: Extract and Clean Version from Git Tag
+        id: get_tag_version
+        run: |
+          # ${{ github.ref_name }} enthält den vollen Tag-Namen (z.B. "v_1.2")
+          TAG_VERSION=${{ github.ref_name }}
+          
+          # Entfernt das 'v_' am Anfang des Tags (z.B. v_1.2 wird zu 1.2)
+          CLEAN_VERSION=$(echo "$TAG_VERSION" | sed 's/^v_//') 
+          
+          echo "CURRENT_VERSION=${CLEAN_VERSION}" >> $GITHUB_ENV
+          echo "Extracted Tag Version: ${{ env.CURRENT_VERSION }}" # Wird 1.2
+
+      # 3. Manifest.json aktualisieren (Pfad: custom_components/victron_vrm_api/manifest.json)
+      - name: Update manifest.json with new version
+        run: |
+          # Definieren Sie den Pfad zur manifest.json
+          MANIFEST_PATH=custom_components/victron_vrm_api/manifest.json
+          
+          # Ersetze die Versionszeile im spezifischen Pfad. 
+          # Wir verwenden '@' als Trennzeichen im sed-Befehl.
+          sed -i 's@"version": ".*"@"version": "${{ env.CURRENT_VERSION }}"@g' "$MANIFEST_PATH"
+          
+          echo "Die Version in $MANIFEST_PATH wurde auf ${{ env.CURRENT_VERSION }} aktualisiert."
+
+      # 4. Aktualisierte Datei committen und pushen
+      - name: Commit and Push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: '⚙️ CI: Update version in manifest.json to ${{ env.CURRENT_VERSION }}'
+          # WICHTIG: Korrekter Dateipfad für den Commit
+          files: custom_components/victron_vrm_api/manifest.json 
+          token: ${{ secrets.GITHUB_TOKEN }}
