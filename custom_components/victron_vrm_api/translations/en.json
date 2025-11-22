@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Victron VRM API Config",
+        "description": "If instance_id = 0, then no Device will be added!",
+        "data": {
+          "site_id": "Victron VRM Site ID",
+          "token": "Victron VRM API Token",
+          "battery_instance_id": "Battery Instance ID",
+          "multi_instance_id": "MultiPlus Instance ID",
+          "pv_instance_id": "PV Inverter Instance ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connection failed",
+      "invalid_auth": "Invalid authentication"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
