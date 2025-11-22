@@ -19,7 +19,7 @@ Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung �
 
   <details>
    <summary> <b>"How to" Site_ID, Instanz Nummer, Token</b></summary>  
-   <img width="3161" height="1111" alt="vrm-api-Erklärung" src="https://github.com/user-attachments/assets/042554e5-9585-4098-8ff6-d4c11b017495" />
+   <img width="3161" height="1111" alt="vrm-api-Erklärung" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/vrm-api-description.png" />
   </details>
 
 ## 📥 Installation der Integration
@@ -46,4 +46,13 @@ Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung �
 
 ## ✅ So sollte es aussehen in HA
 
-<img width="1084" height="513" alt="baaf71fc1a0bd487e77f43b7fb7b184def05f512" src="https://github.com/user-attachments/assets/f0219972-1b75-476b-ad58-1a8cd7bb6816" />
+<img width="1084" height="513" alt="baaf71fc1a0bd487e77f43b7fb7b184def05f512" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/victron-vrm-api.png" />
+
+  <details>
+   <summary> <b>Fotos der Geräte in der Ingration</b></summary>  
+   <img width="320" height="500" alt="vrm-api-Erklärung" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/Config_Menu.png" />
+   <img width="320" height="500" alt="vrm-api-Erklärung" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/Battery.png" />
+   <img width="320" height="500" alt="vrm-api-Erklärung" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/Multiplus.png" />
+   <img width="320" height="500" alt="vrm-api-Erklärung" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/PV_Inverter.png" />
+   <img width="320" height="500" alt="vrm-api-Erklärung" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/Overall.png" />
+  </details>
