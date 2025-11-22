@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Victron VRM API Config",
+        "title": "Victron VRM API",
         "description": "Instance_ID = 0, dann wird kein Gerät hinzugefügt!",
         "data": {
           "site_id": "Victron VRM Site ID",
