@@ -18,8 +18,8 @@ If you like the Integration, I would appreciate a Star rating ⭐ from you. 🤗
 - Instance Number from Battery, Multiplus and PV Inverter
 
   <details>
-   <summary> <b>"How to" Site_ID, Instance Number, Token</b></summary>  
-   <img width="3161" height="1111" alt="vrm-api-Erklärung" src="https://github.com/user-attachments/assets/042554e5-9585-4098-8ff6-d4c11b017495" />
+   <summary> <b>"How to" - Site_ID, Instance Number, Token</b></summary>  
+   <img width="3161" height="1111" alt="vrm-api-Erklärung" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/vrm-api-description.png" />
   </details>
 
 ## 📥 Installing the Integration
@@ -47,5 +47,22 @@ If you like the Integration, I would appreciate a Star rating ⭐ from you. 🤗
 
 ## ✅ How it looks in HA
 
-<img width="1084" height="513" alt="baaf71fc1a0bd487e77f43b7fb7b184def05f512" src="https://github.com/user-attachments/assets/f0219972-1b75-476b-ad58-1a8cd7bb6816" />
+<img width="1084" height="513" alt="baaf71fc1a0bd487e77f43b7fb7b184def05f512" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/victron-vrm-api.png" />
 
+  <details>
+   <summary> <b>Pictures of Devices inside the Ingration</b></summary>  
+   <img width="320" height="500" alt="vrm-api-Erklärung" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/Config_Menu.png" />
+   <img width="320" height="500" alt="vrm-api-Erklärung" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/Battery.png" />
+   <img width="320" height="500" alt="vrm-api-Erklärung" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/Multiplus.png" />
+   <img width="320" height="500" alt="vrm-api-Erklärung" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/PV_Inverter.png" />
+   <img width="320" height="500" alt="vrm-api-Erklärung" src="https://github.com/jayjojayson/hass-victron-vrm-api/blob/main/docs/Overall.png" />
+  </details>
+
+  <details>
+   <summary> <b>Q&A</b></summary> 
+    
+  - Configuration Menu, if the instance number for Battery, Multiplus or PV Inverter is set to 0, then no device will be added!
+    (Example, if you have no Battery, then you don`t need the empty Device in HA.)  
+  - You get the Temperature value with a 1PH Multiplus Setup. With 3Ph Multiplus Setup you dont get this Sensor.
+  - You get Data from your 1Ph or 3Ph PV-Inverter. With 3Ph you get some more Sensors.
+  </details>
