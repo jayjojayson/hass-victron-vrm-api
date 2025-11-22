@@ -7,14 +7,15 @@
 # Victron VRM API 
 Victron VRM API Integration for Home Assistant
 
-Diese Integration nutzt das Victron VRM-Portal, um Daten von der API abzurufen. Aktuell könnt ihr die Daten eurer Batterie und eures MultiPlus auslesen. Außerdem erhaltet ihr die Gesamtstatistiken für Tag, Woche, Monat und Jahr von Solar, Netz, und Total. Ich arbeite daran, weitere Daten von der Victron-API abzurufen.
+Diese Integration nutzt das Victron VRM-Portal, um Daten von der API abzurufen. Alles was ihr dafür braucht, sind ein paar Zahlen aus eurem VRM Portal. 
+Aktuell könnt ihr Daten von Batterie, MultiPlus und PV Inverter auslesen. Außerdem erhaltet ihr die Gesamtstatistiken für Tag, Woche, Monat und Jahr von Solar, Netz, und Total. Ich arbeite daran, weitere Daten von der Victron-API abzurufen.
 
 Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung ⭐ freuen. 🤗
 
 ## ✔️ Voraussetzungen
 - VRM-Zugriffstoken (bitte geheim halten!). Erstelle eines im VRM-Portal unter Einstellungen > Integrationen > Zugriffstoken oder verwende [diesen Link](https://vrm.victronenergy.com/access-tokens).
 - Deine Side_ID
-- Instanz Nummer von Battery und Multiplus
+- Instanz Nummer von Battery, Multiplus und PV Inverter
 
   <details>
    <summary> <b>"How to" Site_ID, Instanz Nummer, Token</b></summary>  
@@ -30,7 +31,7 @@ Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung �
 - Gehe zu `Einstellungen` → `Geräte und Dienste` → `Integration`.
 - Klicke auf `Integration hinzufügen`.
 - Suche nach `victron vrm api` oder kurz `vrm`.
-- Gebe deine Side_ID, dein Token und deine Instance_ID für Battery und MultiPlus ein.
+- Gebe die Side_ID, dein Token und den Instance_ID für Battery, Multiplus und PV Inverter ein.
 
 #
 ### ➡️ Manual
@@ -41,7 +42,7 @@ Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung �
 - Gehe zu `Einstellungen` → `Geräte und Dienste` → `Integration`.
 - Klicke auf `Integration hinzufügen`.
 - Suche nach `victron vrm api` oder kurz `vrm`.
-- Gebe deine Side_ID, dein Token und deine Instance_ID für Battery und MultiPlus ein.
+- Gebe die Side_ID, den Token und deine Instance_ID für Battery, Multiplus und PV Inverterv ein.
 
 ## ✅ So sollte es aussehen in HA
 

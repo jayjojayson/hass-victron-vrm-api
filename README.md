@@ -7,14 +7,15 @@
 # Victron VRM API 
 Victron VRM API Integration for Home Assistant
 
-This integration use the Victron VRM Portal to get Data from the API. At this Time you can read the Data from your Battery and MultiPlus. Also you get the Overall Stats for the Day, Week, Month and Year. I'm working on it, to get some more Data from the victron API.
+This integration use the Victron VRM Portal to get Data from the API. All you need for Setup are some Numbers from your VRM Portal.
+At this Time you can read the Data from Battery, MultiPlus and PV Inverter. Also you get the Overall Stats for the Day, Week, Month and Year. I'm working on it, to get some more Data from the victron API.
 
-If you like the Integration, I would appreciate a star rating ⭐ from you. 🤗 
+If you like the Integration, I would appreciate a Star rating ⭐ from you. 🤗 
 
 ## ✔️ Prerequisites 
 - VRM access token (keep this secret!). Create one in the VRM Portal under Preferences > Integrations > Access tokens or use [this link.](https://vrm.victronenergy.com/access-tokens)
 - your Side_ID
-- Instance Number from Battery and Multiplus
+- Instance Number from Battery, Multiplus and PV Inverter
 
   <details>
    <summary> <b>"How to" Site_ID, Instance Number, Token</b></summary>  
@@ -31,7 +32,7 @@ If you like the Integration, I would appreciate a star rating ⭐ from you. 🤗
 - go to `Settings -> Devices and Services -> Integration`
 - click on `Add Integration`
 - search for `victron vrm api` or short `vrm`
-- fill in your Side_ID, Token and Instance_ID for Battery and MultiPlus
+- fill in your Side_ID, Token and Instance_ID for Battery, Multiplus and PV Inverter
 
 #
 ### ➡️ Manual
@@ -42,7 +43,7 @@ If you like the Integration, I would appreciate a star rating ⭐ from you. 🤗
 - go to `Settings -> Devices and Services -> Integration`
 - click on `Add Integration`
 - search for `victron vrm api` or short `vrm`
-- fill in your Side_ID, Token and Instance_ID for Battery and MultiPlus
+- fill in your Side_ID, Token and Instance_ID for Battery, Multiplus and PV Inverter
 
 ## ✅ How it looks in HA
 

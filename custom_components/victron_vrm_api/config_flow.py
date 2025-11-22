@@ -10,7 +10,8 @@ from .const import (
     CONF_SITE_ID, 
     CONF_TOKEN, 
     CONF_BATTERY_INSTANCE,
-    CONF_MULTI_INSTANCE # FÜR DIE INITIALE KONFIGURATION BEIBEHALTEN
+    CONF_MULTI_INSTANCE,
+    CONF_PV_INVERTER_INSTANCE
 ) 
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,9 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({
     vol.Required(CONF_SITE_ID, description="Victron VRM Site ID"): str,
     vol.Required(CONF_TOKEN, description="VRM API Token"): str,
-    # Beide Instanz-IDs sind in der initialen Konfiguration
+    # Instanz-IDs sind optional (0 = deaktiviert)
     vol.Optional(CONF_BATTERY_INSTANCE, default=0, description="Optional Battery Instance ID"): vol.Coerce(int),
     vol.Optional(CONF_MULTI_INSTANCE, default=0, description="Optional MultiPlus Instance ID"): vol.Coerce(int),
+    vol.Optional(CONF_PV_INVERTER_INSTANCE, default=0, description="Optional PV Inverter Instance ID"): vol.Coerce(int),
 })
 
 
@@ -50,4 +52,3 @@ class VictronVrmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=DATA_SCHEMA,
             errors=errors,
         )
-    
