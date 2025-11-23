@@ -341,21 +341,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             )
         )
         
-    # --- 3.7. PV Inverter Sensoren Leistung -----------------------------------------
+    # --- 3.7. PV Inverter Sensoren Leistung (L1, L2, L3 dynamisch) ------------------------
     pv_inverter_sensors_config = {
+        # L1
         "ac_voltage_l1": ("203", "L1 Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:flash-triangle"),
         "ac_current_l1": ("204", "L1 Current", SensorDeviceClass.CURRENT, SensorStateClass.MEASUREMENT, "A", "mdi:current-ac"),
         "ac_power_l1":   ("205", "L1 Power",   SensorDeviceClass.POWER,   SensorStateClass.MEASUREMENT, "W", "mdi:solar-power"),
         "ac_energy_l1":  ("206", "L1 Energy",  SensorDeviceClass.ENERGY,  SensorStateClass.TOTAL_INCREASING, "kWh", "mdi:solar-panel"),
+        # L2
+        "ac_voltage_l2": ("207", "L2 Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:flash-triangle"),
+        "ac_current_l2": ("208", "L2 Current", SensorDeviceClass.CURRENT, SensorStateClass.MEASUREMENT, "A", "mdi:current-ac"),
+        "ac_power_l2":   ("209", "L2 Power",   SensorDeviceClass.POWER,   SensorStateClass.MEASUREMENT, "W", "mdi:solar-power"),
+        "ac_energy_l2":  ("210", "L2 Energy",  SensorDeviceClass.ENERGY,  SensorStateClass.TOTAL_INCREASING, "kWh", "mdi:solar-panel"),
+        # L3
+        "ac_voltage_l3": ("211", "L3 Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:flash-triangle"),
+        "ac_current_l3": ("212", "L3 Current", SensorDeviceClass.CURRENT, SensorStateClass.MEASUREMENT, "A", "mdi:current-ac"),
+        "ac_power_l3":   ("213", "L3 Power",   SensorDeviceClass.POWER,   SensorStateClass.MEASUREMENT, "W", "mdi:solar-power"),
+        "ac_energy_l3":  ("214", "L3 Energy",  SensorDeviceClass.ENERGY,  SensorStateClass.TOTAL_INCREASING, "kWh", "mdi:solar-panel"),
+        # Status
+        "status_code":   ("246", "Status",     None,                     None,                          None, "mdi:list-status"),
     }
 
     if pv_inverter_coord and pv_inverter_coord.data:
+        # Wir holen uns die tatsächlichen Daten-Records (z.B. keys "203", "207", etc.)
+        actual_data = pv_inverter_coord.data.get("data", {})
+        
         for key, (data_id, name, device_class, state_class, unit, icon) in pv_inverter_sensors_config.items():
-            entities.append(
-                VrmPvInverterSensor(
-                    pv_inverter_coord, site_id, key, data_id, name, device_class, state_class, unit, icon, pv_inverter_device_info
+            # PRÜFUNG: Existiert diese Data-ID in der API-Antwort?
+            # Wenn ja -> Sensor erstellen. Wenn nein -> überspringen.
+            if data_id in actual_data:
+                entities.append(
+                    VrmPvInverterSensor(
+                        pv_inverter_coord, site_id, key, data_id, name, device_class, state_class, unit, icon, pv_inverter_device_info
+                    )
                 )
-            )
 
 
     # --- 4. Overall Stats Sensoren --------------------------------------------------
@@ -425,6 +444,7 @@ class VrmBatteryPowerSensor(VrmBaseSensor):
             coordinator, site_id, key, name, SensorDeviceClass.POWER,
             SensorStateClass.MEASUREMENT, "W", None, device_info
         )
+
     @property
     def native_value(self) -> float:
         if not self.coordinator.data:
@@ -452,6 +472,7 @@ class VrmMultiPlusDCPowerSensor(VrmBaseSensor):
             coordinator, site_id, key, name, SensorDeviceClass.POWER,
             SensorStateClass.MEASUREMENT, "W", None, device_info
         )
+
     @property
     def native_value(self) -> float:
         if not self.coordinator.data:
@@ -480,6 +501,7 @@ class VrmPvTotalTodaySensor(VrmBaseSensor):
             coordinator, site_id, key, name, SensorDeviceClass.ENERGY,
             SensorStateClass.TOTAL_INCREASING, "kWh", "mdi:solar-power", device_info
         )
+
     @property
     def native_value(self) -> float:
         if not self.coordinator.data or "totals" not in self.coordinator.data:
@@ -545,7 +567,7 @@ class VrmMultiStatusSensor(VrmBaseSensor):
             return value_enum
         return data_item.get("value")
 
-# --- 7. PV Inverter Sensor ----------------------------------------------------
+# --- 7. PV Inverter Sensor (UPDATED) ------------------------------------------
 class VrmPvInverterSensor(VrmBaseSensor):
     """Represents a single value from the VRM PV Inverter Status data."""
     def __init__(self, coordinator, site_id, key, data_id, name, device_class, state_class, unit, icon, device_info):
@@ -560,4 +582,14 @@ class VrmPvInverterSensor(VrmBaseSensor):
         attr = data.get(self._data_id, {})
         if not attr:
             return None
-        return attr.get("valueFloat")
+            
+        # Logik analog zu MultiPlus Sensor erweitert für Status-Codes (Enum/String)
+        value_float = attr.get("valueFloat")
+        if value_float is not None:
+            return value_float
+            
+        # Fallback für Status oder andere nicht-numerische Werte (z.B. ID 246)
+        value_enum = attr.get("nameEnum")
+        if value_enum is not None:
+            return value_enum
+        return attr.get("value")
