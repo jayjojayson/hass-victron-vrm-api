@@ -7,9 +7,9 @@
         "data": {
           "site_id": "Victron VRM Site ID",
           "token": "Victron VRM API Token",
-          "battery_instance_id": "Battery Instance ID",
-          "multi_instance_id": "MultiPlus Instance ID",
-          "pv_instance_id": "PV Inverter Instance ID"
+          "battery_instance_id": "Battery - instance_id (optional)",
+          "multi_instance_id": "MultiPlus - instance_id (optional)",
+          "pv_instance_id": "PV Inverter - instance_id (optional)"
         }
       }
     },
