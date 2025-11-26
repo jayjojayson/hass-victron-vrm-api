@@ -3,13 +3,15 @@
     "step": {
       "user": {
         "title": "Victron VRM API",
-        "description": "Instance_ID = 0, dann wird kein Gerät hinzugefügt!",
+        "description": "**Hinweis zur Konfiguration:**\nBitte sicherstellen, dass alle optionalen Felder korrekt ausgefüllt werden, falls diese Geräte verwenden werden sollen. Andernfalls lasse die ID auf 0.\n\nInstance ID = 0, dann wird kein Gerät hinzugefügt!",
         "data": {
-          "site_id": "Victron VRM Site ID",
+          "site_id": "Victron VRM Installations ID / Site ID",
           "token": "Victron VRM API Token",
           "battery_instance_id": "Batterie - instance_id (optional)",
           "multi_instance_id": "MultiPlus - instance_id (optional)",
-          "pv_instance_id": "PV Inverter - instance_id (optional)"
+          "pv_instance_id": "PV Inverter - instance_id (AC/1-3Ph) (optional)",
+          "tank_instance_id": "MultiPlus - instance_id (optional)",
+          "solar_charger_id": "Solar Charger - instance_id (DC/MPPT) (optional)"
         }
       }
     },

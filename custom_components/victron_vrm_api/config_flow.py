@@ -11,7 +11,9 @@ from .const import (
     CONF_TOKEN, 
     CONF_BATTERY_INSTANCE,
     CONF_MULTI_INSTANCE,
-    CONF_PV_INVERTER_INSTANCE
+    CONF_PV_INVERTER_INSTANCE,
+    CONF_TANK_INSTANCE,
+    CONF_SOLAR_CHARGER_INSTANCE
 ) 
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,6 +26,8 @@ DATA_SCHEMA = vol.Schema({
     vol.Optional(CONF_BATTERY_INSTANCE, default=0, description="Optional Battery Instance ID"): vol.Coerce(int),
     vol.Optional(CONF_MULTI_INSTANCE, default=0, description="Optional MultiPlus Instance ID"): vol.Coerce(int),
     vol.Optional(CONF_PV_INVERTER_INSTANCE, default=0, description="Optional PV Inverter Instance ID"): vol.Coerce(int),
+    vol.Optional(CONF_TANK_INSTANCE, default=0, description="Optional Tank Instance ID"): vol.Coerce(int),
+    vol.Optional(CONF_SOLAR_CHARGER_INSTANCE, default=0, description="Optional Solar Charger Instance ID"): vol.Coerce(int),
 })
 
 

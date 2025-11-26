@@ -25,10 +25,14 @@ from .const import (
     CONF_BATTERY_INSTANCE,
     CONF_MULTI_INSTANCE, 
     CONF_PV_INVERTER_INSTANCE,
+    CONF_TANK_INSTANCE,
+    CONF_SOLAR_CHARGER_INSTANCE, # NEU
     DEFAULT_SCAN_INTERVAL_BATTERY,
     DEFAULT_SCAN_INTERVAL_OVERALL,
     DEFAULT_SCAN_INTERVAL_MULTI,
     DEFAULT_SCAN_INTERVAL_PV_INVERTER,
+    DEFAULT_SCAN_INTERVAL_TANK,
+    DEFAULT_SCAN_INTERVAL_SOLAR_CHARGER, # NEU
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +77,7 @@ class VrmDataCoordinator(DataUpdateCoordinator):
                     if "totals" in data:
                         return data
 
-                    # Standard-Verhalten für Widgets (z.B. BatterySummary, PVInverterStatus):
+                    # Standard-Verhalten für Widgets (z.B. BatterySummary, PVInverterStatus, TankSummary, SolarChargerSummary):
                     if "records" in data:
                         return data.get("records", {})
                         
@@ -101,6 +105,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     battery_instance_id = config_data.get(CONF_BATTERY_INSTANCE, 0)
     multi_instance_id = config_data.get(CONF_MULTI_INSTANCE, 0) 
     pv_inverter_instance_id = config_data.get(CONF_PV_INVERTER_INSTANCE, 0) 
+    tank_instance_id = config_data.get(CONF_TANK_INSTANCE, 0)
+    solar_charger_instance_id = config_data.get(CONF_SOLAR_CHARGER_INSTANCE, 0) # NEU
     
     
     # Endpoints definieren (Statische Endpunkte)
@@ -140,6 +146,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         pv_inverter_coord = VrmDataCoordinator(
             hass, site_id, token, pv_inverter_endpoint, "VRM PV Inverter Status", DEFAULT_SCAN_INTERVAL_PV_INVERTER
         )
+
+    # Tank
+    tank_coord = None
+    if tank_instance_id != 0:
+        tank_endpoint = f"widgets/TankSummary?instance={tank_instance_id}"
+        tank_coord = VrmDataCoordinator(
+            hass, site_id, token, tank_endpoint, "VRM Tank Summary", DEFAULT_SCAN_INTERVAL_TANK
+        )
+
+    # Solar Charger (NEU)
+    solar_charger_coord = None
+    if solar_charger_instance_id != 0:
+        solar_charger_endpoint = f"widgets/SolarChargerSummary?instance={solar_charger_instance_id}"
+        solar_charger_coord = VrmDataCoordinator(
+            hass, site_id, token, solar_charger_endpoint, "VRM Solar Charger Summary", DEFAULT_SCAN_INTERVAL_SOLAR_CHARGER
+        )
     
     # Initialen Refresh ausführen (dynamische Liste)
     coordinators = [overall_stats_coord, stats_coord]
@@ -150,6 +172,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         coordinators.append(multi_status_coord)
     if pv_inverter_coord:
         coordinators.append(pv_inverter_coord)
+    if tank_coord:
+        coordinators.append(tank_coord)
+    if solar_charger_coord: # NEU
+        coordinators.append(solar_charger_coord)
     
     for coordinator in coordinators:
         try:
@@ -188,6 +214,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         "model": f"instance_id {pv_inverter_instance_id}", 
         "via_device": (DOMAIN, site_id),
     }
+    tank_device_info = {
+        "identifiers": {(DOMAIN, f"{site_id}_tank")},
+        "name": "Tank",
+        "manufacturer": "Victron VRM API",
+        "model": f"instance_id {tank_instance_id}", 
+        "via_device": (DOMAIN, site_id),
+    }
+    solar_charger_device_info = { # NEU
+        "identifiers": {(DOMAIN, f"{site_id}_solarcharger")},
+        "name": "Solar Charger",
+        "manufacturer": "Victron VRM API",
+        "model": f"instance_id {solar_charger_instance_id}", 
+        "via_device": (DOMAIN, site_id),
+    }
     overall_device_info = {
         "identifiers": {(DOMAIN, f"{site_id}_overall")},
         "name": "Stats Overall",
@@ -198,6 +238,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 
     # --- 1. Battery Summary Sensoren ------------------------------------------------
+    # ... (Batterie Sensoren wie zuvor) ...
     battery_sensors_config = {
         "soc": ("51", "State of charge", SensorDeviceClass.BATTERY, SensorStateClass.MEASUREMENT, "%", "mdi:battery-50"),
         "voltage": ("47", "Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:current-dc"),
@@ -212,7 +253,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     power_sensor_key = "power"
     power_sensor_name = "Battery Power"
 
-    # Hinzufügen der Sensoren nur, wenn der Koordinator existiert (Instance ID > 0)
     if battery_summary_coord and battery_summary_coord.data:
         for key, (data_id, name, device_class, state_class, unit, icon) in battery_sensors_config.items():
             entities.append(
@@ -227,6 +267,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         )
 
     # --- 2. Battery Additional Stats Sensoren (Bc, Bg) ---------------------------------
+    # ... (Battery Stats wie zuvor) ...
     additional_stats = {
         "Bc": ("Battery to Consumers Today", SensorDeviceClass.ENERGY, "mdi:battery-arrow-down"),
         "Bg": ("Battery to Grid Today", SensorDeviceClass.ENERGY, "mdi:battery-arrow-down"), 
@@ -252,6 +293,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             )
 
     # --- 3. MultiPlus Status Sensoren --------------------------------------------
+    # ... (MultiPlus Sensoren wie zuvor) ...
     multi_status_sensors_config = {
         "ac_in_voltage": ("8", "AC Input Voltage L1", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:transmission-tower"),
         "ac_in_power": ("17", "AC Input Power L1", SensorDeviceClass.POWER, SensorStateClass.MEASUREMENT, "W", "mdi:transmission-tower"),
@@ -280,6 +322,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         )
 
     # --- 3.5. MultiPlus Additional Stats Sensoren (Gc, Gb) ---------------------------------
+    # ... (MultiPlus Stats wie zuvor) ...
     multi_additional_stats = {
         "Gc": ("Grid to Consumers Today", SensorDeviceClass.ENERGY, "mdi:transmission-tower"),
         "Gb": ("Grid to Battery Today", SensorDeviceClass.ENERGY, "mdi:battery-arrow-down"),
@@ -305,7 +348,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             )
 
     # --- 3.6. PV Inverter Additional Stats Sensoren (Pc, Pb, Pg) -----------------------
-    # Diese Sensoren werden vom Vorhandensein des PV Inverter Coordinators abhängig gemacht.
+    # ... (PV Inverter Stats wie zuvor) ...
     pv_additional_stats = {
         "Pc": ("PV to Consumers Today", SensorDeviceClass.ENERGY, "mdi:solar-power-variant-outline"),
         "Pb": ("PV to Battery Today", SensorDeviceClass.ENERGY, "mdi:battery-arrow-down-outline"),
@@ -342,6 +385,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         )
         
     # --- 3.7. PV Inverter Sensoren Leistung (L1, L2, L3 dynamisch) ------------------------
+    # ... (PV Inverter Phasen Sensoren wie zuvor) ...
     pv_inverter_sensors_config = {
         # L1
         "ac_voltage_l1": ("203", "L1 Voltage", SensorDeviceClass.VOLTAGE, SensorStateClass.MEASUREMENT, "V", "mdi:flash-triangle"),
@@ -363,12 +407,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     }
 
     if pv_inverter_coord and pv_inverter_coord.data:
-        # Wir holen uns die tatsächlichen Daten-Records (z.B. keys "203", "207", etc.)
         actual_data = pv_inverter_coord.data.get("data", {})
-        
         for key, (data_id, name, device_class, state_class, unit, icon) in pv_inverter_sensors_config.items():
-            # PRÜFUNG: Existiert diese Data-ID in der API-Antwort?
-            # Wenn ja -> Sensor erstellen. Wenn nein -> überspringen.
             if data_id in actual_data:
                 entities.append(
                     VrmPvInverterSensor(
@@ -376,8 +416,53 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                     )
                 )
 
+    # --- 3.8. Tank Sensoren ------------------------------------
+    # ... (Tank Sensoren wie zuvor) ...
+    tank_sensors_config = {
+        "level":     ("330", "Level",     None,                     SensorStateClass.MEASUREMENT, "%",  "mdi:cup-water"),
+        "remaining": ("331", "Remaining", SensorDeviceClass.VOLUME, SensorStateClass.MEASUREMENT, "m³", "mdi:cup-water"),
+        "capacity":  ("328", "Capacity",  SensorDeviceClass.VOLUME, None,                         "m³", "mdi:beaker"),
+        "status":    ("443", "Status",    None,                     None,                         None, "mdi:list-status"),
+        "type":      ("329", "Type",      None,                     None,                         None, "mdi:information-outline"),
+        "name":      ("638", "Custom Name", None,                   None,                         None, "mdi:tag-text"),
+    }
+
+    if tank_coord and tank_coord.data:
+        actual_tank_data = tank_coord.data.get("data", {})
+        
+        for key, (data_id, name, device_class, state_class, unit, icon) in tank_sensors_config.items():
+            if str(data_id) in actual_tank_data:
+                entities.append(
+                    VrmTankSensor(
+                        tank_coord, site_id, key, data_id, name, device_class, state_class, unit, icon, tank_device_info
+                    )
+                )
+
+    # --- 3.9. Solar Charger Sensoren ---------------------------
+    solar_charger_sensors_config = {
+        "battery_watts":   ("107", "Battery Watts",     SensorDeviceClass.POWER,     SensorStateClass.MEASUREMENT,      "W",   "mdi:battery-charging-90"),
+        "battery_voltage": ("81",  "Battery Voltage",   SensorDeviceClass.VOLTAGE,   SensorStateClass.MEASUREMENT,      "V",   "mdi:current-dc"),
+        "charge_state":    ("85",  "Charge State",      None,                        None,                              None,  "mdi:solar-power"),
+        "battery_temp":    ("83",  "Battery Temperature", SensorDeviceClass.TEMPERATURE, SensorStateClass.MEASUREMENT,  "°C",  "mdi:thermometer"),
+        "yield_today":     ("94",  "Yield Today",       SensorDeviceClass.ENERGY,    SensorStateClass.TOTAL_INCREASING, "kWh", "mdi:solar-power"),
+        "yield_yesterday": ("96",  "Yield Yesterday",   SensorDeviceClass.ENERGY,    SensorStateClass.TOTAL_INCREASING, "kWh", "mdi:solar-panel"),
+        "relay_status":    ("90",  "Relay Status",      None,                        None,                              None,  "mdi:electric-switch"),
+    }
+
+    if solar_charger_coord and solar_charger_coord.data:
+        actual_sc_data = solar_charger_coord.data.get("data", {})
+        
+        for key, (data_id, name, device_class, state_class, unit, icon) in solar_charger_sensors_config.items():
+            # Daten-IDs sind hier Strings ('107', '81', etc.)
+            if str(data_id) in actual_sc_data:
+                entities.append(
+                    VrmSolarChargerSensor(
+                        solar_charger_coord, site_id, key, data_id, name, device_class, state_class, unit, icon, solar_charger_device_info
+                    )
+                )
 
     # --- 4. Overall Stats Sensoren --------------------------------------------------
+    # ... (Overall Stats Sensoren wie zuvor) ...
     periods = ["today", "week", "month", "year"]
     metrics = {
         "total_solar_yield": ("Solar Yield", SensorDeviceClass.ENERGY, "mdi:solar-power"),
@@ -567,7 +652,7 @@ class VrmMultiStatusSensor(VrmBaseSensor):
             return value_enum
         return data_item.get("value")
 
-# --- 7. PV Inverter Sensor (UPDATED) ------------------------------------------
+# --- 7. PV Inverter Sensor ----------------------------------------------------
 class VrmPvInverterSensor(VrmBaseSensor):
     """Represents a single value from the VRM PV Inverter Status data."""
     def __init__(self, coordinator, site_id, key, data_id, name, device_class, state_class, unit, icon, device_info):
@@ -583,12 +668,60 @@ class VrmPvInverterSensor(VrmBaseSensor):
         if not attr:
             return None
             
-        # Logik analog zu MultiPlus Sensor erweitert für Status-Codes (Enum/String)
         value_float = attr.get("valueFloat")
         if value_float is not None:
             return value_float
             
-        # Fallback für Status oder andere nicht-numerische Werte (z.B. ID 246)
+        value_enum = attr.get("nameEnum")
+        if value_enum is not None:
+            return value_enum
+        return attr.get("value")
+
+# --- 8. Tank Sensor ----------------------------------------------------------
+class VrmTankSensor(VrmBaseSensor):
+    """Represents a single value from the VRM Tank Status data."""
+    def __init__(self, coordinator, site_id, key, data_id, name, device_class, state_class, unit, icon, device_info):
+        super().__init__(coordinator, site_id, key, name, device_class, state_class, unit, icon, device_info)
+        self._data_id = data_id
+        
+    @property
+    def native_value(self):
+        if not self.coordinator.data:
+            return None
+        data = self.coordinator.data.get("data", {})
+        attr = data.get(str(self._data_id), {}) 
+        if not attr:
+            return None
+            
+        value_float = attr.get("valueFloat")
+        if value_float is not None:
+            return value_float
+            
+        value_enum = attr.get("nameEnum")
+        if value_enum is not None:
+            return value_enum
+        return attr.get("value")
+
+# --- 9. Solar Charger Sensor -------------------------------------------------
+class VrmSolarChargerSensor(VrmBaseSensor):
+    """Represents a single value from the VRM Solar Charger Status data."""
+    def __init__(self, coordinator, site_id, key, data_id, name, device_class, state_class, unit, icon, device_info):
+        super().__init__(coordinator, site_id, key, name, device_class, state_class, unit, icon, device_info)
+        self._data_id = data_id
+        
+    @property
+    def native_value(self):
+        if not self.coordinator.data:
+            return None
+        data = self.coordinator.data.get("data", {})
+        attr = data.get(str(self._data_id), {}) 
+        if not attr:
+            return None
+            
+        value_float = attr.get("valueFloat")
+        if value_float is not None:
+            return value_float
+            
         value_enum = attr.get("nameEnum")
         if value_enum is not None:
             return value_enum
