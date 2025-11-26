@@ -14,7 +14,7 @@ Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung �
 
 ## ✔️ Voraussetzungen
 - VRM-Zugriffstoken (bitte geheim halten!). Erstelle eines im VRM-Portal unter Einstellungen > Integrationen > Zugriffstoken oder verwende [diesen Link](https://vrm.victronenergy.com/access-tokens).
-- Deine Side_ID
+- Deine Side_ID (VRM-Installations-ID)
 - Instanz Nummer von Battery, Multiplus und PV Inverter
 
   <details>
