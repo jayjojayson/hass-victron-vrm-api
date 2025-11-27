@@ -10,7 +10,7 @@
           "battery_instance_id": "Batterie - instance_id (optional)",
           "multi_instance_id": "MultiPlus - instance_id (optional)",
           "pv_instance_id": "PV Inverter - instance_id (AC/1-3Ph) (optional)",
-          "tank_instance_id": "MultiPlus - instance_id (optional)",
+          "tank_instance_id": "Tank - instance_id (optional)",
           "solar_charger_id": "Solar Charger - instance_id (DC/MPPT) (optional)"
         }
       }
