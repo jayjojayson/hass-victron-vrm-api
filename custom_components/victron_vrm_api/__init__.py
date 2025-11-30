@@ -1,6 +1,11 @@
 """The component entry point for the Victron VRM Energy integration."""
 import logging
 
+# NEUE IMPORTE für CONFIG_SCHEMA
+from homeassistant.helpers import config_validation as cv
+import voluptuous as vol
+# -----------------------------
+
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import ConfigType
@@ -10,6 +15,11 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"] 
+
+# FIX: Hinzufügen des CONFIG_SCHEMA, das dem Validator mitteilt,
+# dass die Integration nur über Config Entries (UI) konfiguriert wird.
+CONFIG_SCHEMA = cv.config_entry_only_config_schema
+# -------------------------------------------------------------------
 
 # NOTE: async_reload_entry und der Update Listener sind entfernt.
 
@@ -40,3 +50,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+ 
