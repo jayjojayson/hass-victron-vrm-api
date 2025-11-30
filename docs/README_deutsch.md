@@ -8,7 +8,7 @@
 Victron VRM API Integration for Home Assistant
 
 Diese Integration nutzt das Victron VRM-Portal, um Daten von der API abzurufen. Alles was ihr dafür braucht, sind ein paar Zahlen aus eurem VRM Portal. 
-Aktuell könnt ihr Daten von Batterie, MultiPlus und PV Inverter auslesen. Außerdem erhaltet ihr die Gesamtstatistiken für Tag, Woche, Monat und Jahr von Solar, Netz, und Total. Ich arbeite daran, weitere Daten von der Victron-API abzurufen.
+Aktuell könnt ihr Daten von Batterie, MultiPlus, PV Inverter, Tank und SolarCharger auslesen. Außerdem erhaltet ihr die Gesamtstatistiken für Tag, Woche, Monat und Jahr von Solar, Netz, und Total. Ich arbeite daran, weitere Daten von der Victron-API abzurufen.
 
 Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung ⭐ freuen. 🤗
 
