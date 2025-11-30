@@ -3,17 +3,30 @@
     "step": {
       "user": {
         "title": "Victron VRM API",
-        "description": "**Hinweis zur Konfiguration:**\nBitte sicherstellen, dass alle optionalen Felder korrekt ausgefüllt werden, falls diese Geräte verwenden werden sollen. Andernfalls lasse die ID auf 0.\n\nInstance ID = 0, dann wird kein Gerät hinzugefügt!",
+        "description": "**Hinweis zur Konfiguration:**\nBitte sicherstellen, dass alle optionalen Felder korrekt ausgefüllt werden, falls diese Geräte verwenden werden sollen. Andernfalls lasse die ID auf 0 oder das Feld leer.\n\nInstance ID = 0 oder `leeres Feld`, dann wird kein Gerät hinzugefügt!\n\nEs können mehrere Geräte je Instance ID durch Kommas getrennt eintragen werden. Beispiel: 100, 101, 102",
         "data": {
           "site_id": "Victron VRM Installations ID / Site ID",
           "token": "Victron VRM API Token",
-          "battery_instance_id": "Batterie - instance_id (optional)",
-          "multi_instance_id": "MultiPlus - instance_id (optional)",
-          "pv_instance_id": "PV Inverter - instance_id (AC/1-3Ph) (optional)",
-          "tank_instance_id": "Tank - instance_id (optional)",
-          "solar_charger_id": "Solar Charger - instance_id (DC/MPPT) (optional)"
+          "battery_instance_ids": "Batterie - instance_id (optional)",
+          "multi_instance_ids": "MultiPlus - instance_id (optional)",
+          "pv_instance_ids": "PV Inverter - instance_id (AC/1-3Ph) (optional)",
+          "tank_instance_ids": "Tank - instance_id (optional)",
+          "solar_charger_ids": "Solar Charger - instance_id (DC/MPPT) (optional)"
         }
-      }
+      },
+      "reconfigure": {
+        "description": "Bitte bestätigen Sie die geänderten Konfigurationsdaten.",
+        "data": {
+          "site_id": "Victron VRM Installations ID / Site ID",
+          "token": "Victron VRM API Token",
+          "battery_instance_ids": "Batterie - instance_id (optional)",
+          "multi_instance_ids": "MultiPlus - instance_id (optional)",
+          "pv_instance_ids": "PV Inverter - instance_id (AC/1-3Ph) (optional)",
+          "tank_instance_ids": "Tank - instance_id (optional)",
+          "solar_charger_ids": "Solar Charger - instance_id (DC/MPPT) (optional)"
+        }
+      },
+      "reconfigure_successful": "Die Konfiguration wurde erfolgreich aktualisiert.\nDie Sensoren werden neu geladen."
     },
     "error": {
       "cannot_connect": "Verbindung fehlgeschlagen",

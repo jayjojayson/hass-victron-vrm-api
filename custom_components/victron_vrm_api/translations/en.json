@@ -3,17 +3,30 @@
     "step": {
       "user": {
         "title": "Victron VRM API",
-        "description": "If instance_id = 0, then no Device will be added!",
+        "description": "**Configuration Note:**\nPlease ensure that all optional fields are filled in correctly if these devices are to be used. Otherwise, leave the ID set to 0 or the field empty.\n\nInstance ID = 0 or `empty field` means no device will be added!\n\nMultiple devices per Instance ID can be entered separated by commas. Example: 100, 101, 102",
         "data": {
           "site_id": "Victron VRM Installations ID / Site ID",
           "token": "Victron VRM API Token",
-          "battery_instance_id": "Battery - instance_id (optional)",
-          "multi_instance_id": "MultiPlus - instance_id (optional)",
-          "pv_instance_id": "PV Inverter - instance_id (AC/1-3Ph) (optional)",
-          "tank_instance_id": "Tank - instance_id (optional)",
-          "solar_charger_id": "Solar Charger - instance_id (DC/MPPT) (optional)"
+          "battery_instance_ids": "Battery - instance_id (optional)",
+          "multi_instance_ids": "MultiPlus - instance_id (optional)",
+          "pv_instance_ids": "PV Inverter - instance_id (AC/1-3Ph) (optional)",
+          "tank_instance_ids": "Tank - instance_id (optional)",
+          "solar_charger_ids": "Solar Charger - instance_id (DC/MPPT) (optional)"
         }
-      }
+      },
+      "reconfigure": {
+        "description": "Please confirm the modified configuration data.",
+        "data": {
+          "site_id": "Victron VRM Installations ID / Site ID",
+          "token": "Victron VRM API Token",
+          "battery_instance_ids": "Battery - instance_id (optional)",
+          "multi_instance_ids": "MultiPlus - instance_id (optional)",
+          "pv_instance_ids": "PV Inverter - instance_id (AC/1-3Ph) (optional)",
+          "tank_instance_ids": "Tank - instance_id (optional)",
+          "solar_charger_ids": "Solar Charger - instance_id (DC/MPPT) (optional)"
+        }
+      },
+      "reconfigure_successful": "The configuration was successfully updated.\nThe sensors are being reloaded."
     },
     "error": {
       "cannot_connect": "Connection failed",
