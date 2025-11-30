@@ -15,7 +15,7 @@
         }
       },
       "reconfigure": {
-        "description": "Bitte bestätigen Sie die geänderten Konfigurationsdaten.",
+        "description": "**Bitte bestätigen Sie die geänderten Konfigurationsdaten.**\n\n**Hinweis zur Konfiguration:**\nBitte sicherstellen, dass alle optionalen Felder korrekt ausgefüllt werden, falls diese Geräte verwenden werden sollen. Andernfalls lasse die ID auf 0 oder das Feld leer.\n\nInstance ID = 0 oder `leeres Feld`, dann wird kein Gerät hinzugefügt!\n\nEs können mehrere Geräte je Instance ID durch Kommas getrennt eintragen werden. Beispiel: 100, 101, 102",
         "data": {
           "site_id": "Victron VRM Installations ID / Site ID",
           "token": "Victron VRM API Token",
