@@ -145,7 +145,8 @@ If you like the Integration, I would appreciate a Star rating ⭐ from you. 🤗
    <summary> <b>Q&A</b></summary> 
     
   - Configuration Menu, if the instance number for Battery, Multiplus or PV Inverter is set to 0, then no device will be added!
-    (Example, if you have no Battery, then you don`t need the empty Device in HA.)  
+    (Example, if you have no Battery, then you don`t need the empty Device in HA.)
+  - You can add more instance ids separated by comma (100, 101, 102)
   - You get the Temperature value with a 1PH Multiplus Setup. With 3Ph Multiplus Setup you dont get this Sensor.
   - You get Data from your 1Ph or 3Ph PV-Inverter. With 3Ph you get some more Sensors.
   </details>
