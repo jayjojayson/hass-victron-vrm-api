@@ -15,8 +15,8 @@
         }
       },
       "reconfigure": {
-        "description": "**Please confirm the updated configuration data.**\n\n**Configuration note:**\nPlease make sure that all optional fields are filled in correctly if those devices are intended to be used. Otherwise, leave the ID set to 0 or leave the field empty.\n\nInstance ID = 0 or an `empty field` means no device will be added!\n\nMultiple devices per Instance ID can be entered, separated by commas. Example: 100, 101, 102"
-		"data": {
+        "description": "**Please confirm the updated configuration data.**\n\n**Configuration note:**\nPlease make sure that all optional fields are filled in correctly if those devices are intended to be used. Otherwise, leave the ID set to 0 or leave the field empty.\n\nInstance ID = 0 or an `empty field` means no device will be added!\n\nMultiple devices per Instance ID can be entered, separated by commas. Example: 100, 101, 102",
+        "data": {
           "site_id": "Victron VRM Installations ID / Site ID",
           "token": "Victron VRM API Token",
           "battery_instance_ids": "Battery - instance_id (optional)",
