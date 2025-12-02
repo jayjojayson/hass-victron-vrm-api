@@ -18,13 +18,13 @@ If you like the Integration, I would appreciate a Star rating ⭐ from you. 🤗
 ### Overview Devices
 | Device Type | Number of Sensors |
 | :--- | :---: |
-| **Battery** | 11 |
+| **Battery** | 33 |
 | **MultiPlus** | 11 |
 | **PV Inverter** | 16 |
 | **Tank** | 6 |
 | **Solar Charger** | 7 |
 | **Overall Stats** | 16 |
-| **Total** | 67 |
+| **Total** | 89 |
 
 ### Sensor Details
 | Device Type | Sensor Name | VRM ID / Key | Unit | Description |
@@ -38,8 +38,30 @@ If you like the Integration, I would appreciate a Star rating ⭐ from you. 🤗
 | **Battery** | Minimum Cell Voltage | `173` | V | Minimum Cell Voltage (BMS) |
 | **Battery** | Maximum Cell Voltage | `174` | V | Maximum Cell Voltage (BMS) |
 | **Battery** | Battery Power | *(Calculated)* | W | Current Power (V*A) |
+| **Battery** | Battery Charge Cycles | `58` | - | Full Charge Cycles |
 | **Battery** | Battery to Consumers (Today) | `Bc` | kWh | Energy to Load (Today) |
 | **Battery** | Battery to Grid (Today) | `Bg` | kWh | Energy to Grid (Today) |
+| **Battery** | Low voltage alarm | `119` | - | Low voltage alarm |
+| **Battery** | High voltage alarm | `120` | - | High voltage alarm |
+| **Battery** | Low starter-voltage alarm | `121` | - | Low starter-voltage alarm |
+| **Battery** | High starter-voltage alarm | `122` | - | High starter-voltage alarm |
+| **Battery** | Low state-of-charge alarm | `123` | - | Low state of charge |
+| **Battery** | Low battery temperature alarm | `124` | - | Battery temperature too low |
+| **Battery** | High battery temperature alarm | `125` | - | Battery temperature too high |
+| **Battery** | Mid-voltage alarm | `126` | - | Mid-voltage anomaly |
+| **Battery** | Low fused-voltage alarm | `155` | - | Low fused voltage |
+| **Battery** | High fused-voltage alarm | `156` | - | High fused voltage |
+| **Battery** | Fuse blown alarm | `157` | - | Fuse blown |
+| **Battery** | High internal-temperature alarm | `158` | - | Internal temperature alarm |
+| **Battery** | Cell imbalance alarm | `286` | - | Cell imbalance detected |
+| **Battery** | High charge current alarm | `287` | - | Charge current too high |
+| **Battery** | High discharge current alarm | `288` | - | Discharge current too high |
+| **Battery** | Internal failure | `289` | - | Internal failure detected |
+| **Battery** | High charge temperature alarm | `459` | - | Charge temperature too high |
+| **Battery** | Low charge temperature alarm | `460` | - | Charge temperature too low |
+| **Battery** | Low cell voltage | `522` | - | Low cell voltage |
+| **Battery** | Charge blocked | `739` | - | Charging blocked (BMS) |
+| **Battery** | Discharge blocked | `740` | - | Discharging blocked (BMS) |
 | --- | --- | --- | --- | --- |
 | **MultiPlus** | AC Input Voltage L1 | `8` | V | AC Input Voltage Phase 1 |
 | **MultiPlus** | AC Input Power L1 | `17` | W | AC Input Power Phase 1 |
