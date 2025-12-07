@@ -3,7 +3,7 @@
 # Die Domäne (muss mit dem Ordnernamen übereinstimmen)
 DOMAIN = "victron_vrm_api"
 
-# Konfigurationsschlüssel (Erwartet nun eine durch Komma getrennte Liste von Instanz-IDs als String)
+# Konfigurationsschlüssel
 CONF_SITE_ID = "site_id"
 CONF_TOKEN = "token"
 CONF_BATTERY_INSTANCE = "battery_instance_ids"      # Instance IDs der Batterien (String: '1, 2')
@@ -13,9 +13,10 @@ CONF_TANK_INSTANCE = "tank_instance_ids"            # Instance IDs des Tanks (St
 CONF_SOLAR_CHARGER_INSTANCE = "solar_charger_ids"   # Instance IDs des Solar Chargers (String: '400, 401')
 
 # Standard-Aktualisierungsintervalle (in Sekunden)
-DEFAULT_SCAN_INTERVAL_BATTERY = 20       # 20 Sekunden
-DEFAULT_SCAN_INTERVAL_MULTI = 20         # 20 Sekunden 
-DEFAULT_SCAN_INTERVAL_PV_INVERTER = 20   # 20 Sekunden
-DEFAULT_SCAN_INTERVAL_TANK = 60          # 60 Sekunden 
-DEFAULT_SCAN_INTERVAL_SOLAR_CHARGER = 20 # 20 Sekunden 
-DEFAULT_SCAN_INTERVAL_OVERALL = 300      # 5 Minuten
+DEFAULT_SCAN_INTERVAL_BATTERY = 20           # 20 Sekunden
+DEFAULT_SCAN_INTERVAL_MULTI = 20             # 20 Sekunden 
+DEFAULT_SCAN_INTERVAL_PV_INVERTER = 20       # 20 Sekunden
+DEFAULT_SCAN_INTERVAL_TANK = 60              # 60 Sekunden 
+DEFAULT_SCAN_INTERVAL_SOLAR_CHARGER = 20     # 20 Sekunden 
+DEFAULT_SCAN_INTERVAL_OVERALL = 300          # 5 Minuten
+DEFAULT_SCAN_INTERVAL_SYSTEM_OVERVIEW = 1200 # 20 Minuten 
