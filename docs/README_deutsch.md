@@ -38,6 +38,7 @@ Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung �
 | **Battery** | Battery Temperature | `115` | °C | Battery Temperature |
 | **Battery** | Minimum Cell Voltage | `173` | V | Minimum Cell Voltage (BMS) |
 | **Battery** | Maximum Cell Voltage | `174` | V | Maximum Cell Voltage (BMS) |
+| **Battery** | Cell Voltage Difference | *(Calculated)* | V | Cell Voltage Difference |
 | **Battery** | Battery Power | *(Calculated)* | W | Current Power (V*A) |
 | **Battery** | Battery Charge Cycles | `58` | - | Full Charge Cycles |
 | **Battery** | Battery to Consumers (Today) | `Bc` | kWh | Energy to Load (Today) |
@@ -109,6 +110,7 @@ Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung �
 | **Solar Charger** | Yield Yesterday | `96` | kWh | Energy Yield Yesterday |
 | **Solar Charger** | Relay Status | `90` | - | Relay State |
 | --- | --- | --- | --- | --- |
+| **Overall Stats** | * Batteries Total Power | `vrm_batteries_power_total` | W | Total Batteries Power |
 | **Overall Stats** | * Total Solar Yield | `total_solar_yield` | kWh | Total PV Yield (for selected period) |
 | **Overall Stats** | * Total Consumption | `total_consumption` | kWh | Total Consumption (for selected period) |
 | **Overall Stats** | * Grid Energy In | `grid_history_from` | kWh | Energy from Grid (for selected period) |

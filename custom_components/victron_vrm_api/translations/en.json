@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Victron VRM API",
-        "description": "**Configuration Note:**\nPlease ensure that all optional fields are filled in correctly if these devices are to be used. Otherwise, leave the ID set to 0 or the field empty.\n\nInstance ID = 0 or `empty field` means no device will be added!\n\nMultiple devices per Instance ID can be entered separated by commas. Example: 100, 101, 102",
+        "description": "**Configuration Note:**\nPlease ensure that all optional fields are filled in correctly if these devices are to be used. Otherwise, leave the field just empty.\n\n**`empty field`** means no device will be added!\n\nMultiple devices per Instance ID can be entered separated by commas. Example: 100, 101, 102",
         "data": {
           "site_id": "Victron VRM Installations ID / Site ID",
           "token": "Victron VRM API Token",
@@ -15,7 +15,7 @@
         }
       },
       "reconfigure": {
-        "description": "**Please confirm the updated configuration data.**\n\n**Configuration note:**\nPlease make sure that all optional fields are filled in correctly if those devices are intended to be used. Otherwise, leave the ID set to 0 or leave the field empty.\n\nInstance ID = 0 or an `empty field` means no device will be added!\n\nMultiple devices per Instance ID can be entered, separated by commas. Example: 100, 101, 102",
+        "description": "**Please confirm the updated configuration data.**\n\n**Configuration note:**\nPlease make sure that all optional fields are filled in correctly if those devices are intended to be used. Otherwise, leave the field just empty.\n\n**`empty field`** means no device will be added!\n\nMultiple devices per Instance ID can be entered, separated by commas. Example: 100, 101, 102",
         "data": {
           "site_id": "Victron VRM Installations ID / Site ID",
           "token": "Victron VRM API Token",
