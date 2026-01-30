@@ -17,15 +17,16 @@ Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung �
    <summary> <b>VRM API unterstützte Geräte und Sensoren</b></summary> 
 
 ### Übersicht Geräte
+### Overview Devices
 | Device Type | Number of Sensors |
 | :--- | :---: |
-| **Battery** | 33 |
+| **Battery** | 34 |
 | **MultiPlus** | 11 |
 | **PV Inverter** | 16 |
 | **Tank** | 6 |
 | **Solar Charger** | 7 |
-| **Overall Stats** | 16 |
-| **Total** | 89 |
+| **Overall Stats** | 17 |
+| **Total** | 91 |
 
 ### Sensor Details
 | Device Type | Sensor Name | VRM ID / Key | Unit | Description |
