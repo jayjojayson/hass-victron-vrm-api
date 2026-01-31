@@ -9,8 +9,8 @@
 # Victron VRM API 
 Victron VRM API Integration for Home Assistant
 
-This integration use the Victron VRM Portal to get Data from the API. All you need for Setup are some Numbers from your VRM Portal.
-At this Time you can read the Data from Battery, MultiPlus, PV Inverter, Tank and Solar Charger. Also you get the Overall Stats for the Day, Week, Month and Year. I'm working on it, to get some more Data from the victron API.
+This integration use the Victron VRM Portal to get Data from the API. All you need for Setup are some Numbers from your VRM Portal. It’s perfect for mobile systems like motorhomes, caravans and boats where there is no local access to the Victron system. Of course, it can also be used in homes or other projects.
+At this Time you can read the Data from Battery, MultiPlus, Grid, PV Inverter, Tank and Solar Charger. Also you get the Overall Stats for the Day, Week, Month and Year and some other System Data. 
 
 If you like the Integration, I would appreciate a Star rating ⭐ from you. 🤗 
 
@@ -19,14 +19,15 @@ If you like the Integration, I would appreciate a Star rating ⭐ from you. 🤗
 
 ### Overview Devices
 | Device Type | Number of Sensors |
-| :--- | :---: |
 | **Battery** | 34 |
-| **MultiPlus** | 11 |
-| **PV Inverter** | 16 |
+| **MultiPlus** | 12 |
+| **Grid Meter** | 10 |
+| **PV Inverter** | 17 |
 | **Tank** | 6 |
 | **Solar Charger** | 7 |
-| **Overall Stats** | 17 |
-| **Total** | 91 |
+| **System Overview** | 5 |
+| **Overall Stats** | 20 |
+| **Total** | 111 |
 
 ### Sensor Details
 | Device Type | Sensor Name | VRM ID / Key | Unit | Description |
@@ -75,8 +76,20 @@ If you like the Integration, I would appreciate a Star rating ⭐ from you. 🤗
 | **MultiPlus** | VE.Bus State | `40` | - | Operating State (e.g., Inverting) |
 | **MultiPlus** | MultiPlus Temperature | `521` | °C | Device Temperature |
 | **MultiPlus** | DC Bus Power | *(Calculated)* | W | Current DC Power (V*A) |
+| **MultiPlus** | System State of Charge | `144` | % | System-calculated state of charge (replaces internal MultiPlus SOC) |
 | **MultiPlus** | Grid to Consumers (Today) | `Gc` | kWh | Energy from Grid to Load (Today) |
 | **MultiPlus** | Grid to Battery (Today) | `Gb` | kWh | Energy from Grid to Battery (Today) |
+| --- | --- | --- | --- | --- |
+| **Grid Meter** | Grid L1 Voltage | `834` | V | Voltage on grid meter phase L1 |
+| **Grid Meter** | Grid L1 Current | `835` | A | Current on grid meter phase L1 |
+| **Grid Meter** | Grid L1 Power | `379` | W | Power on grid meter phase L1. |
+| **Grid Meter** | Grid L2 Voltage | `837` | V | Voltage on grid meter phase L2 |
+| **Grid Meter** | Grid L2 Current | `838` | A | Current on grid meter phase L2 |
+| **Grid Meter** | Grid L2 Power | `380` | W | Power on grid meter phase L2 |
+| **Grid Meter** | Grid L3 Voltage | `840` | V | Voltage on grid meter phase L3 |
+| **Grid Meter** | Grid L3 Current | `841` | A | Current on grid meter phase L3 |
+| **Grid Meter** | Grid L3 Power | `381` | W | Power on grid meter phase L3. |
+| **Grid Meter** | Grid Total Power | *(Calculated)* | W | Sum of power across all three phases (L1+L2+L3) |
 | --- | --- | --- | --- | --- |
 | **PV Inverter** | L1 Voltage | `203` | V | Voltage Phase 1 |
 | **PV Inverter** | L1 Current | `204` | A | Current Phase 1 |
@@ -111,7 +124,16 @@ If you like the Integration, I would appreciate a Star rating ⭐ from you. 🤗
 | **Solar Charger** | Yield Yesterday | `96` | kWh | Energy Yield Yesterday |
 | **Solar Charger** | Relay Status | `90` | - | Relay State |
 | --- | --- | --- | --- | --- |
+| **System Overview** | Infos for each Device | - | - | Detailed Infos for each Device  |
+| **System Overview** | ESS Battery Life State | `332` | - | Current status of the BatteryLife algorithm (e.g., "Self-consumption", "BL Disabled") |
+| **System Overview** | ESS Battery Life SOC Limit | `333` | % | Dynamic SOC limit currently set by BatteryLife |
+| **System Overview** | ESS Minimum SOC | `334` | % | User-defined minimum SOC (when grid is available) |
+| **System Overview** | ESS Scheduled Charging | `469` | - | Status of scheduled charging (e.g., "Active", "Not active") |
+| --- | --- | --- | --- | --- |
 | **Overall Stats** | * Batteries Total Power | `vrm_batteries_power_total` | W | Total Batteries Power |
+| **Overall Stats** | * PV Inverter Total Power | `vrm_pv_inverters_power_total` | W | Total PV Inverter Power |
+| **Overall Stats** | * Solar Charger Total Power | `vrm_solar_chargers_power_total` | W | Total Solar Charger Power |
+| **Overall Stats** | * DC Loads | `vrm_dc_loads` | W | Calculated DC Loads (MP, PV, Battery) |
 | **Overall Stats** | * Total Solar Yield | `total_solar_yield` | kWh | Total PV Yield (for selected period) |
 | **Overall Stats** | * Total Consumption | `total_consumption` | kWh | Total Consumption (for selected period) |
 | **Overall Stats** | * Grid Energy In | `grid_history_from` | kWh | Energy from Grid (for selected period) |
