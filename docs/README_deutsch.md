@@ -18,6 +18,7 @@ Wenn euch die Integration gefällt, würde ich mich über eine Sternebewertung �
 
 ### Übersicht Geräte
 | Device Type | Number of Sensors |
+| :--- | :---: |
 | **Battery** | 34 |
 | **MultiPlus** | 12 |
 | **Grid Meter** | 10 |
