@@ -11,7 +11,8 @@
           "multi_instance_ids": "MultiPlus - instance_id (optional)",
           "pv_instance_ids": "PV Inverter - instance_id (AC/1-3Ph) (optional)",
           "tank_instance_ids": "Tank - instance_id (optional)",
-          "solar_charger_ids": "Solar Charger - instance_id (DC/MPPT) (optional)"
+          "solar_charger_ids": "Solar Charger - instance_id (DC/MPPT) (optional)",
+          "grid_instance_ids": "Grid Meter - instance_id (optional)"
         }
       },
       "reconfigure": {
@@ -23,7 +24,8 @@
           "multi_instance_ids": "MultiPlus - instance_id (optional)",
           "pv_instance_ids": "PV Inverter - instance_id (AC/1-3Ph) (optional)",
           "tank_instance_ids": "Tank - instance_id (optional)",
-          "solar_charger_ids": "Solar Charger - instance_id (DC/MPPT) (optional)"
+          "solar_charger_ids": "Solar Charger - instance_id (DC/MPPT) (optional)",
+          "grid_instance_ids": "Grid Meter - instance_id (optional)"
         }
       },
       "reconfigure_successful": {

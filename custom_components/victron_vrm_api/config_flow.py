@@ -14,7 +14,8 @@ from .const import (
     CONF_MULTI_INSTANCE,
     CONF_PV_INVERTER_INSTANCE,
     CONF_TANK_INSTANCE,
-    CONF_SOLAR_CHARGER_INSTANCE
+    CONF_SOLAR_CHARGER_INSTANCE,
+    CONF_GRID_INSTANCE
 ) 
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ DATA_SCHEMA = vol.Schema({
     vol.Optional(CONF_PV_INVERTER_INSTANCE, default="", description="PV Inverter Instance IDs (e.g., '200')"): str,
     vol.Optional(CONF_TANK_INSTANCE, default="", description="Tank Instance IDs (e.g., '300, 301')"): str,
     vol.Optional(CONF_SOLAR_CHARGER_INSTANCE, default="", description="Solar Charger Instance IDs (e.g., '400')"): str,
+    vol.Optional(CONF_GRID_INSTANCE, default="", description="Grid Meter Instance IDs (e.g., '30')"): str,
 })
 
 
@@ -82,6 +84,7 @@ class VictronVrmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_PV_INVERTER_INSTANCE, default=current_config.get(CONF_PV_INVERTER_INSTANCE, ""), description="PV Inverter Instance IDs (e.g., '200')"): str,
             vol.Optional(CONF_TANK_INSTANCE, default=current_config.get(CONF_TANK_INSTANCE, ""), description="Tank Instance IDs (e.g., '300, 301')"): str,
             vol.Optional(CONF_SOLAR_CHARGER_INSTANCE, default=current_config.get(CONF_SOLAR_CHARGER_INSTANCE, ""), description="Solar Charger Instance IDs (e.g., '400')"): str,
+            vol.Optional(CONF_GRID_INSTANCE, default=current_config.get(CONF_GRID_INSTANCE, ""), description="Grid Meter Instance IDs (e.g., '30')"): str,
         })
 
         return self.async_show_form(
@@ -89,3 +92,4 @@ class VictronVrmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=reconfigure_schema,
             errors=errors,
         )
+        

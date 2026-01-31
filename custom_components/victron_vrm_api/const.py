@@ -11,6 +11,7 @@ CONF_MULTI_INSTANCE = "multi_instance_ids"          # Instance IDs des MultiPlus
 CONF_PV_INVERTER_INSTANCE = "pv_instance_ids"       # Instance IDs des PV Inverters (String: '200, 201')
 CONF_TANK_INSTANCE = "tank_instance_ids"            # Instance IDs des Tanks (String: '300')
 CONF_SOLAR_CHARGER_INSTANCE = "solar_charger_ids"   # Instance IDs des Solar Chargers (String: '400, 401')
+CONF_GRID_INSTANCE = "grid_instance_ids"            # Instance IDs des Grid Meters (String: '30')
 
 # Standard-Aktualisierungsintervalle (in Sekunden)
 DEFAULT_SCAN_INTERVAL_BATTERY = 20           # 20 Sekunden
@@ -20,3 +21,4 @@ DEFAULT_SCAN_INTERVAL_TANK = 60              # 60 Sekunden
 DEFAULT_SCAN_INTERVAL_SOLAR_CHARGER = 20     # 20 Sekunden 
 DEFAULT_SCAN_INTERVAL_OVERALL = 300          # 5 Minuten
 DEFAULT_SCAN_INTERVAL_SYSTEM_OVERVIEW = 1200 # 20 Minuten 
+DEFAULT_SCAN_INTERVAL_DIAGNOSTICS = 60       # 60 Sekunden
