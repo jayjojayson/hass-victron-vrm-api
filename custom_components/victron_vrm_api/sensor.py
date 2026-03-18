@@ -1202,7 +1202,7 @@ class VrmDcLoadsSensor(SensorEntity):
 
     @property
     def native_value(self):
-        # Formula: (Total Solar + Total PV) - Total Battery Power - Total MultiPlus DC Power
+        # Formula: (Total Solar + Total PV) - Total Battery Power + Total MultiPlus DC Power
         
         total_solar = 0.0
         for c in self.sc_coordinators:
@@ -1238,7 +1238,7 @@ class VrmDcLoadsSensor(SensorEntity):
                 if v is not None and i is not None:
                     total_multi += (v * i)
                     
-        return round((total_solar + total_pv) - total_batt - total_multi, 2)
+        return round((total_solar + total_pv) - total_batt + total_multi, 2)
 
 # --- 6.6. Calculated MultiPlus DC Power Sensor --------------------------------------
 class VrmMultiPlusDCPowerSensor(VrmBaseSensor):
