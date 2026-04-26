@@ -18,7 +18,7 @@ jobs:
       - name: Create release zip
         run: |
           cd custom_components
-          zip -r ../victron_vrm_api.zip victron_vrm_api/
+          zip -r ../victron_vrm_api.zip victron_vrm_api/ -x "*.pyc" -x "*/__pycache__/*" -x "*.backup"
 
       - name: Upload zip to release
         uses: softprops/action-gh-release@v2
