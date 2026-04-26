@@ -522,7 +522,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 entities.append(
                     VrmOverallStatsSensor(
                         stats_coord, site_id, f"stats_{json_key}_{instance_id}", data_path, name,
-                        device_class, SensorStateClass.TOTAL_INCREASING, "kWh", icon, dev_info 
+                        device_class, SensorStateClass.TOTAL, "kWh", icon, dev_info 
                     )
                 )
 
@@ -599,7 +599,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 entities.append(
                     VrmOverallStatsSensor(
                         stats_coord, site_id, f"stats_{json_key}_{instance_id}", data_path, name,
-                        device_class, SensorStateClass.TOTAL_INCREASING, "kWh", icon, dev_info
+                        device_class, SensorStateClass.TOTAL, "kWh", icon, dev_info
                     )
                 )
 
@@ -618,7 +618,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 entities.append(
                     VrmOverallStatsSensor(
                         stats_coord, site_id, f"stats_{json_key}_{instance_id}", data_path, name,
-                        device_class, SensorStateClass.TOTAL_INCREASING, "kWh", icon, dev_info 
+                        device_class, SensorStateClass.TOTAL, "kWh", icon, dev_info 
                     )
                 )
             entities.append(
@@ -689,8 +689,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         "battery_voltage": ("81",  "Battery Voltage",   SensorDeviceClass.VOLTAGE,   SensorStateClass.MEASUREMENT,      "V",   "mdi:current-dc"),
         "charge_state":    ("85",  "Charge State",      None,                        None,                              None,  "mdi:solar-power"),
         "battery_temp":    ("83",  "Battery Temperature", SensorDeviceClass.TEMPERATURE, SensorStateClass.MEASUREMENT,  "°C",  "mdi:thermometer"),
-        "yield_today":     ("94",  "Yield Today",       SensorDeviceClass.ENERGY,    SensorStateClass.TOTAL_INCREASING, "kWh", "mdi:solar-power"),
-        "yield_yesterday": ("96",  "Yield Yesterday",   SensorDeviceClass.ENERGY,    SensorStateClass.TOTAL_INCREASING, "kWh", "mdi:solar-panel"),
+        "yield_today":     ("94",  "Yield Today",       SensorDeviceClass.ENERGY,    SensorStateClass.TOTAL, "kWh", "mdi:solar-power"),
+        "yield_yesterday": ("96",  "Yield Yesterday",   SensorDeviceClass.ENERGY,    SensorStateClass.TOTAL, "kWh", "mdi:solar-panel"),
         "relay_status":    ("90",  "Relay Status",      None,                        None,                              None,  "mdi:electric-switch"),
     }
 
@@ -727,7 +727,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 entities.append(
                     VrmOverallStatsSensor(
                         overall_stats_coord, site_id, key, data_path, name, device_class,
-                        SensorStateClass.TOTAL_INCREASING, 
+                        SensorStateClass.TOTAL, 
                         "kWh", icon, overall_device_info 
                     )
                 )
@@ -1202,7 +1202,7 @@ class VrmDcLoadsSensor(SensorEntity):
 
     @property
     def native_value(self):
-        # Formula: (Total Solar + Total PV) - Total Battery Power - Total MultiPlus DC Power
+        # Formula: (Total Solar + Total PV) - Total Battery Power + Total MultiPlus DC Power
         
         total_solar = 0.0
         for c in self.sc_coordinators:
@@ -1238,7 +1238,7 @@ class VrmDcLoadsSensor(SensorEntity):
                 if v is not None and i is not None:
                     total_multi += (v * i)
                     
-        return round((total_solar + total_pv) - total_batt - total_multi, 2)
+        return round((total_solar + total_pv) - total_batt + total_multi, 2)
 
 # --- 6.6. Calculated MultiPlus DC Power Sensor --------------------------------------
 class VrmMultiPlusDCPowerSensor(VrmBaseSensor):
@@ -1279,7 +1279,7 @@ class VrmPvTotalTodaySensor(VrmBaseSensor):
     def __init__(self, coordinator, site_id, key, name, device_info):
         super().__init__(
             coordinator, site_id, key, name, SensorDeviceClass.ENERGY,
-            SensorStateClass.TOTAL_INCREASING, "kWh", "mdi:solar-power", device_info
+            SensorStateClass.TOTAL, "kWh", "mdi:solar-power", device_info
         )
 
     @property

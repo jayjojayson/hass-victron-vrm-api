@@ -1,0 +1,23 @@
+name: release-build
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create release zip
+        run: |
+          cd custom_components
+          zip -r ../victron_vrm_api.zip victron_vrm_api/
+
+      - name: Upload zip to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: victron_vrm_api.zip

@@ -1,0 +1,52 @@
+export default {
+  tab1Render: {
+    theme_choice: "Wähle Kartenthema:",
+    light: "Hell",
+    dark: "Dunkel",
+    auto: "Auto",
+    transparent: "Transparent",
+    devices_per_column: "Anzahl der \"Geräte\" pro Spalte:",
+    font_size_zones: "Schriftgröße in \"Geräte\"-Zonen:",
+    in_header: "im Header",
+    in_devices: "in Geräten",
+    in_footer: "im Footer",
+    font_size: "Schriftgröße",
+    colors_title: "Farben anpassen:",
+    box_shadow_color: "Box/Rahmen",
+    anchor_color: "Ankerpunkt",
+    graph_color: "Linien",
+    ball_color: "Animationspunkt",
+    text_main_color: "Hauptwert Schrift",
+    text_sub_color: "Unterwert Schrift",
+    ball_size: "Größe Animationspunkt"
+  },
+  subtabRender: {
+    header_title: "Header Konfiguration",
+    icon_choice: "Icon Auswahl",
+    name_choice: "Gerätename",
+    sensor_title: "Hauptsensor Konfiguration",
+    entity_choice: "Entitätsauswahl",
+    entity2_choice: "Zweite Entitätsauswahl",
+    enable_graph: "Grafik aktivieren",
+    enable_gauge: "Anzeige in % aktivieren",
+    warning_gauge: "Kann nur aktiviert werden, wenn die Maßeinheit % ist",
+    header_footer_title: "Header und Footer Sensoren Konfiguration",
+    entity_header: "Wähle Header Entität",
+    entity_footer: "Wähle Footer Entität",
+    entity2_footer: "Wähle 2. Footer Entität",
+    entity3_footer: "Wähle 3. Footer Entität",
+    anchor_title: "Anker hinzufügen",
+    left_qtyBox: "Links",
+    top_qtyBox: "Oben",
+    bottom_qtyBox: "Unten",
+    right_qtyBox: "Rechts",
+    add_links: "Links hinzufügen",
+    add_link: "Link hinzufügen"
+  },
+  addLink: {
+    start: "Start",
+    end: "Ende",
+    entity_picker: "Wähle Entität",
+    reverse: "umkehren"
+  }
+};
