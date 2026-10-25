@@ -15,7 +15,9 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 
-_LOVELACE_CARD_URL = "/victron_vrm_api/victron-vrm-api.js"
+# ?v=... bei jedem Release erhöhen: erzwingt, dass Browser die neue Card-Version laden
+# (alte Ressourcen-Einträge mit anderer Version werden automatisch ersetzt).
+_LOVELACE_CARD_URL = "/victron_vrm_api/victron-vrm-api.js?v=1.9"
 _WWW_PATH = str(Path(__file__).parent / "www")
 
 # NOTE: async_reload_entry und der Update Listener sind entfernt.

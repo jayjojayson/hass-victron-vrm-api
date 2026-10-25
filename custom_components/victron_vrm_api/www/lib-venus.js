@@ -4,6 +4,78 @@ export let historicData = new Map();
 
 export let updateGraphTriggers = new Map();
 
+// Version der Historie pro Entität (wird bei jedem erfolgreichen Abruf erhöht).
+// Jede Karte merkt sich, welche Version sie gezeichnet hat → mehrere Karten
+// (Dashboard + Editor-Vorschau) können denselben Graphen zeichnen.
+const historicVersion = new Map();
+
+/* Anzahl Boxen pro Spalte (gleiche Grenzen wie im Editor) */
+export function getBoxCount(param, col) {
+    const max = col === 2 ? 2 : 4;
+    const raw = parseInt(param?.[`boxCol${col}`], 10);
+    if (isNaN(raw)) return 1;
+    return Math.min(Math.max(raw, 1), max);
+}
+
+/* "true"/true → true (YAML/Editor liefern teils Strings) */
+function isTrue(value) {
+    return value === true || value === "true";
+}
+
+/* Anker-String "L-1, B-2" robust zerlegen (auch "L-1,B-2") */
+export function parseAnchors(anchorsValue) {
+    if (!anchorsValue) return [];
+    return String(anchorsValue)
+        .split(/\s*,\s*/)
+        .map((a) => a.trim())
+        .filter((a) => /^[LTBR]-\d+$/.test(a))
+        .map((a) => {
+            const [type, qtyStr] = a.split('-');
+            return { type, qty: parseInt(qtyStr, 10) };
+        });
+}
+
+/* Schriftgröße: Zahl → px, sonst unverändert (z.B. "1.2em") */
+function toFontSize(value) {
+    if (value === undefined || value === null || value === "") return "";
+    return /^\d+(\.\d+)?$/.test(String(value)) ? `${value}px` : String(value);
+}
+
+/* HTML-Sonderzeichen maskieren (Namen/Werte kommen aus Config/States) */
+function esc(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+/**
+ * Wert + Einheit einer Entität formatieren. Nutzt (falls vorhanden) die
+ * HA-Formatierung → Anzeigegenauigkeit, Sprache/Locale und übersetzte
+ * Zustände wie "Nicht verfügbar".
+ */
+export function formatEntity(hass, entityId, fallback = "") {
+    const stateObj = entityId ? hass?.states?.[entityId] : undefined;
+    if (!stateObj) return { value: fallback, unit: "", raw: undefined };
+    const unit = stateObj.attributes?.unit_of_measurement || "";
+    let value = stateObj.state;
+    if (typeof hass.formatEntityState === "function") {
+        try {
+            let formatted = hass.formatEntityState(stateObj);
+            if (typeof formatted === "string") {
+                if (unit && formatted.endsWith(unit)) {
+                    formatted = formatted.slice(0, -unit.length).trim();
+                }
+                value = formatted;
+            }
+        } catch (e) {
+            // Fallback auf Rohwert
+        }
+    }
+    return { value, unit, raw: stateObj.state };
+}
+
 // Per-Karteninstanz-State (Schlüssel: appendTo-Element).
 // So teilen Hauptkarte und Editor-Vorschaukarte KEINEN gemeinsamen Zustand mehr.
 const perCard = new WeakMap();
@@ -16,6 +88,9 @@ function getState(appendTo) {
             dashboardOldWidth: undefined,
             mustRedrawLine: true,
             checkReadyRafId: null,
+            intervals: new Map(),
+            graphDrawn: new Map(),
+            hass: null,
         });
     }
     return perCard.get(appendTo);
@@ -110,12 +185,7 @@ export function addAnchors(config, appendTo) {
     Object.entries(config.devices || {}).forEach(([boxKey, device]) => {
         if (device?.anchors) {
             // Extraire les ancres définies pour le device
-            const anchorsStr = String(device.anchors);
-            const anchors = anchorsStr.split(', ').map((anchors) => {
-                const [type, qtyStr] = anchors.split('-'); // Exemple : "R-1" devient ["R", "1"]
-                const qty = parseInt(qtyStr, 10); // Quantité d'ancres à créer
-                return { box: boxKey, type, qty };
-            });
+            const anchors = parseAnchors(device.anchors);
 
             // Traiter chaque ancre
             anchors.forEach(({ type, qty }) => {
@@ -172,27 +242,33 @@ function creatAnchors(colNbrs, boxNbrs, numAnchors, type, appendTo) {
 /**********************************************/
 export function fillBox(config, styles, isDark, hass, appendTo) {
     
-    const devices = config.devices || [];
+    const devices = config.devices || {};
+    styles = styles && typeof styles === "object" ? styles : {};
+
+    // aktuelles hass für die periodischen Historien-Abrufe merken
+    getState(appendTo).hass = hass;
     
     for (const boxId in devices) {
         
+        // Box-ID muss das Format "Spalte-Box" haben (z.B. "1-2")
+        if (!/^[1-3]-[1-4]$/.test(boxId)) continue;
+
         const boxIdtest = parseInt(boxId[2], 10);
-        const boxIdmax = parseInt(config.param[`boxCol${boxId[0]}`], 10);
+        const boxIdmax = getBoxCount(config.param, parseInt(boxId[0], 10));
         
-        if(boxIdtest > boxIdmax )  {
-    		console.error(`Boîte avec l'ID "${boxIdtest}" introuvable.`);
-    		return;
-    	}
+        // Box existiert in dieser Konfiguration nicht → überspringen (nicht abbrechen!)
+        if(boxIdtest > boxIdmax) continue;
             
-        const device = devices[boxId];
+        const device = devices[boxId] || {};
             
-        const divGraph = appendTo.querySelector(`#dashboard > #column-${boxId[0]} > #box_${boxId} > #graph_${boxId}`);
         const divGauge = appendTo.querySelector(`#dashboard > #column-${boxId[0]} > #box_${boxId} > #gauge_${boxId}`);
         const innerContent = appendTo.querySelector(`#dashboard > #column-${boxId[0]} > #box_${boxId} > #content_${boxId}`);
+
+        if (!innerContent || !divGauge) continue;
                 
-        let state = hass.states[device.entity];
-        let value = state ? state.state : 'N/C';
-        let unit = state && state.attributes.unit_of_measurement ? state.attributes.unit_of_measurement : '';
+        const main = formatEntity(hass, device.entity, device.entity ? 'N/C' : '');
+        let value = main.value;
+        let unit = main.unit;
             
         let addGauge = "";
         let addHeaderEntity = "";
@@ -203,12 +279,15 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
         let addSensor2Style = "";
         let addFooterStyle = "";
         
-        if(device.graph) creatGraph(boxId, device, isDark, appendTo);
+        if(isTrue(device.graph)) creatGraph(boxId, device, isDark, appendTo);
         
-        if(device.gauge) divGauge.style.height = value + `%`;
+        if(isTrue(device.gauge)) {
+            const pct = parseFloat(main.raw);
+            divGauge.style.height = isNaN(pct) ? `0px` : `${Math.min(Math.max(pct, 0), 100)}%`;
+        }
         else divGauge.style.height = `0px`;
             
-        if(styles.header != "") {
+        if(styles.header) {
             if(styles.header == "auto") {
                 
                 let dynSizeHeader = "";
@@ -219,11 +298,11 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
                 addHeaderStyle = ` style="font-size: ${dynSizeHeader}px;"`;
                 
             } else {
-                addHeaderStyle = ` style="font-size: ${styles.header}px;"`;
+                addHeaderStyle = ` style="font-size: ${toFontSize(styles.header)};"`;
             }
         } 
         
-        if(styles.sensor != "") {
+        if(styles.sensor) {
             if(styles.sensor == "auto") {
                     
                 let dynSizeSensor = "";
@@ -234,12 +313,12 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
                 addSensorStyle = ` style="font-size: ${dynSizeSensor}px;"`;
                     
             } else {
-                addSensorStyle = ` style="font-size: ${styles.sensor};"`;
+                addSensorStyle = ` style="font-size: ${toFontSize(styles.sensor)};"`;
             }
         }
         
-        if(styles.sensor2 != "") {
-            if(styles.sensor == "auto") {
+        if(styles.sensor2) {
+            if(styles.sensor2 == "auto") {
                     
                 let dynSizeSensor2 = "";
                     
@@ -249,11 +328,11 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
                 addSensor2Style = ` style="font-size: ${dynSizeSensor2}px;"`;
                     
             } else {
-                addSensor2Style = ` style="font-size: ${styles.sensor2}px;"`
+                addSensor2Style = ` style="font-size: ${toFontSize(styles.sensor2)};"`
             }
         }
             
-        if(styles.footer != "") {
+        if(styles.footer) {
             if(styles.footer == "auto") {
                     
                 let dynSizeFooter = "";
@@ -264,74 +343,75 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
                 addFooterStyle = ` style="font-size: ${dynSizeFooter}px;"`;
                     
             } else {
-                addFooterStyle = ` style="font-size: ${styles.footer};"`;
+                addFooterStyle = ` style="font-size: ${toFontSize(styles.footer)};"`;
             }
         }
             
         if(device.headerEntity) {
-            const stateHeaderEnt = hass.states[device.headerEntity];
-            const valueHeaderEnt = stateHeaderEnt ? stateHeaderEnt.state : '';
-            const unitvalueHeaderEnt = stateHeaderEnt && stateHeaderEnt.attributes.unit_of_measurement ? stateHeaderEnt.attributes.unit_of_measurement : '';
+            const h = formatEntity(hass, device.headerEntity);
                 
             addHeaderEntity = `
-                <div class="headerEntity">${valueHeaderEnt}<div class="boxUnit">${unitvalueHeaderEnt}</div></div>
+                <div class="headerEntity">${esc(h.value)}<div class="boxUnit">${esc(h.unit)}</div></div>
             `;
         }
         
         if(device.entity2) {
-            const stateEntity2 = hass.states[device.entity2];
-            const valueEntity2 = stateEntity2 ? stateEntity2.state : '';
-            const unitvalueEntity2 = stateEntity2 && stateEntity2.attributes.unit_of_measurement ? stateEntity2.attributes.unit_of_measurement : '';
+            const e2 = formatEntity(hass, device.entity2);
                 
             addEntity2 = `
-                <div class="boxSensor2"${addSensor2Style}>${valueEntity2}<div class="boxUnit">${unitvalueEntity2}</div></div>
+                <div class="boxSensor2"${addSensor2Style}>${esc(e2.value)}<div class="boxUnit">${esc(e2.unit)}</div></div>
             `;
         }
             
         if(device.footerEntity1) {
                 
-            const stateFooterEnt1 = hass.states[device.footerEntity1];
-            const valueFooterEnt1 = stateFooterEnt1 ? stateFooterEnt1.state : '';
-            const unitvalueFooterEnt1 = stateFooterEnt1 && stateFooterEnt1.attributes.unit_of_measurement ? stateFooterEnt1.attributes.unit_of_measurement : '';
-                
-            const stateFooterEnt2 = hass.states[device.footerEntity2];
-            const valueFooterEnt2 = stateFooterEnt2 ? stateFooterEnt2.state : '';
-            const unitvalueFooterEnt2 = stateFooterEnt2 && stateFooterEnt2.attributes.unit_of_measurement ? stateFooterEnt2.attributes.unit_of_measurement : '';
-                
-            const stateFooterEnt3 = hass.states[device.footerEntity3];
-            const valueFooterEnt3 = stateFooterEnt3 ? stateFooterEnt3.state : '';
-            const unitvalueFooterEnt3 = stateFooterEnt3 && stateFooterEnt3.attributes.unit_of_measurement ? stateFooterEnt3.attributes.unit_of_measurement : '';
+            const f1 = formatEntity(hass, device.footerEntity1);
+            const f2 = formatEntity(hass, device.footerEntity2);
+            const f3 = formatEntity(hass, device.footerEntity3);
             
             addFooter = `
                 <div class="boxFooter"${addFooterStyle}>
-                    <div class="footerCell">${valueFooterEnt1}<div class="boxUnit">${unitvalueFooterEnt1}</div></div>
-                    <div class="footerCell">${valueFooterEnt2}<div class="boxUnit">${unitvalueFooterEnt2}</div></div>
-                    <div class="footerCell">${valueFooterEnt3}<div class="boxUnit">${unitvalueFooterEnt3}</div></div>
+                    <div class="footerCell">${esc(f1.value)}<div class="boxUnit">${esc(f1.unit)}</div></div>
+                    <div class="footerCell">${esc(f2.value)}<div class="boxUnit">${esc(f2.unit)}</div></div>
+                    <div class="footerCell">${esc(f3.value)}<div class="boxUnit">${esc(f3.unit)}</div></div>
                 </div>
             `;
         }
             
-        innerContent.innerHTML = `
+        const html = `
             <div class="boxHeader"${addHeaderStyle}>
-                <ha-icon icon="${device.icon}" class="boxIcon"></ha-icon>
-                <div class="boxTitle">${device.name}</div>
+                ${device.icon ? `<ha-icon icon="${esc(device.icon)}" class="boxIcon"></ha-icon>` : ''}
+                <div class="boxTitle">${esc(device.name)}</div>
                 ${addHeaderEntity}
             </div>
-            <div class="boxSensor1"${addSensorStyle}>${value}<div class="boxUnit">${unit}</div></div>
+            <div class="boxSensor1"${addSensorStyle}>${esc(value)}<div class="boxUnit">${esc(unit)}</div></div>
             ${addEntity2}
             ${addFooter}
         `;
+
+        // Nur neu schreiben, wenn sich etwas geändert hat (set hass wird bei JEDER
+        // Zustandsänderung in HA aufgerufen → sonst ständiges Neu-Rendern/Flackern)
+        if (innerContent._vrmHtml !== html) {
+            innerContent._vrmHtml = html;
+            innerContent.innerHTML = html;
+        }
+
+        // Entität für den Klick aktuell halten (Config kann sich ändern)
+        innerContent.dataset.entity = device.entity || "";
         
         if (!innerContent.dataset.listener) {
             innerContent.dataset.listener = "true"; // Marque comme ayant un listener
         
             innerContent.addEventListener('click', () => {
-                const entityId = device.entity; // Remplace par l'entité associée à la div
+                const entityId = innerContent.dataset.entity;
+                if (!entityId) return;
         
                 // Déclenche l'événement "more-info" de Home Assistant
-                const event = new Event('hass-more-info', { bubbles: true, composed: true });
-                event.detail = { entityId }; // Passer l'entité à afficher
-                innerContent.dispatchEvent(event);
+                innerContent.dispatchEvent(new CustomEvent('hass-more-info', {
+                    bubbles: true,
+                    composed: true,
+                    detail: { entityId },
+                }));
             });
         }
     }
@@ -339,22 +419,16 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
 
 function creatGraph (boxId, device, isDark, appendTo) {
     
-    if(!updateGraphTriggers.get(device.entity)) return;
+    const state = getState(appendTo);
+    const version = historicVersion.get(device.entity);
+
+    // Nur zeichnen, wenn neue Daten vorliegen (pro Karte und Box)
+    if (version === undefined || state.graphDrawn.get(boxId) === `${device.entity}#${version}`) return;
     
     const divGraph = appendTo.querySelector(`#dashboard > #column-${boxId[0]} > #box_${boxId} > #graph_${boxId}`);
     const data = historicData.get(device.entity);
     
-    if (!data || data.length === 0) {
-        console.warn(`Aucune donnée pour l'entité ${device.entity}.`);
-        return;
-    }
-    
-    //console.log(data);
-    if (!data || data.length === 0) {
-        console.warn(`Données non disponibles pour ${device.entity}.`);
-        updateGraphTriggers.set(device.entity, false); // Désactiver temporairement le trigger
-        return;
-    }
+    if (!divGraph || !data || data.length < 2) return;
     
     // Générer le path SVG
     const pathD = generatePath(data, 500, 99); // Dimensions SVG fixées pour cet exemple
@@ -364,21 +438,25 @@ function creatGraph (boxId, device, isDark, appendTo) {
         colorPath = "#ffffff77";
     } 
     
+    if (!pathD || pathD.includes("NaN")) return;
+
     divGraph.innerHTML = `
         <svg viewBox="0 0 500 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="width: 100%; height: 100%;">
             <path fill="none" stroke="${colorPath}" stroke-width="3" d="${pathD}" />
         </svg>
     `;
 
-    updateGraphTriggers.set(device.entity, false);
+    state.graphDrawn.set(boxId, `${device.entity}#${version}`);
 }
 
 function generatePath(data, svgWidth = 500, svgHeight = 100) {
-    if (!data || data.length === 0) return '';
+    if (!data || data.length < 2) return '';
 
     // Étape 1 : Calculer min/max pour normalisation
     const minY = Math.min(...data.map(d => d.value));
-    const maxY = Math.max(...data.map(d => d.value));
+    let maxY = Math.max(...data.map(d => d.value));
+    // Konstante Werte → Division durch 0 vermeiden (flache Linie in der Mitte)
+    if (maxY === minY) maxY = minY + 1;
 
     // Étape 2 : Normalisation des points
     const normalizedData = data.map((d, index) => ({
@@ -547,7 +625,8 @@ function addLine(devices, isDarkTheme, appendTo, config) {
                 
                 if(link == "nolink") continue;
                 
-                const inv = link.inv === true ? -1 : 1;          // Par défaut, "inv" est 1 s'il n'est pas défini
+                if (!link || typeof link !== "object") continue;
+                const inv = isTrue(link.inv) ? -1 : 1;          // Par défaut, "inv" est 1 s'il n'est pas défini
                         
                 // Affichage des informations du lien
                 if (link.start && link.end) creatLine(`${boxId}_${link.start}`, link.end, inv, isDarkTheme, appendTo, config);
@@ -817,8 +896,9 @@ export function checkForReverse(devices, hass, appendTo) {
                 for (const linkId in links) {
                     
                     const link = links[linkId];
+                    if (!link || typeof link !== "object") continue;
                     
-                    const stateLinkEnt = hass.states[link.entity];
+                    const stateLinkEnt = link.entity ? hass.states[link.entity] : undefined;
                     const rawValue = stateLinkEnt ? stateLinkEnt.state : undefined;
                     const valueLinkEnt = parseFloat(rawValue);
                     
@@ -841,44 +921,50 @@ export function checkForReverse(devices, hass, appendTo) {
 /* groupe de fonctions permettant de lancer la recup  */
 /* de l'historique a interval regulier                */
 /******************************************************/
-export async function startPeriodicTask(config, hass) {
+export async function startPeriodicTask(config, hass, appendTo) {
     
-    clearAllIntervals();
+    // Nur die Intervalle DIESER Karte stoppen (früher wurden global alle
+    // Intervalle gelöscht → Editor-Vorschau stoppte die Graphen der Hauptkarte)
+    clearCardIntervals(appendTo);
     
-    const devices = config.devices || [];
+    const devices = config.devices || {};
+    const state = appendTo ? getState(appendTo) : null;
+    const cardIntervals = state ? state.intervals : intervals;
+    const intervalMinutes = 15;
+    let allOk = true;
     
     for (const boxId in devices) {
         
         const device = devices[boxId];
             
-        if(device.graph) {
-            
-            const intervalMinutes = 15;
-            
-            //console.log(`Tentative de démarrage de la tâche périodique pour ${device.entity}. Intervalle : ${intervalMinutes} minutes.`);
+        if(device && isTrue(device.graph) && device.entity && !cardIntervals.has(device.entity)) {
             
             // Vérifie si la première exécution réussit
             const firstExecutionSuccessful = await performTask(device.entity, hass);
             
             if (!firstExecutionSuccessful) {
-                console.warn(`La première exécution a échoué pour ${device.entity}. Tâche périodique annulée.`);
-                clearAllIntervals();
-                return false; // Ne démarre pas la tâche périodique si la première exécution échoue
+                // Kein Abbruch für alle anderen Graphen – nur diese Entität überspringen
+                console.warn(`Victron VRM API Card: Historie für ${device.entity} nicht verfügbar.`);
+                allOk = false;
+                continue;
             }
             
-            //console.log(`Première exécution réussie pour ${device.entity}. Mise en place de la tâche périodique.`);
-
-            
-            // Planifier la tâche périodique pour cette entité
+            // Planifier la tâche périodique pour cette entité (immer mit aktuellem hass)
             const intervalId = setInterval(() => {
-                performTask(device.entity, hass);
+                performTask(device.entity, (state && state.hass) || hass);
             }, intervalMinutes * 60 * 1000);
     
             // Stocker l'intervalle dans la Map
-            intervals.set(device.entity, intervalId);
+            cardIntervals.set(device.entity, intervalId);
         }
     }
-    return true;
+    return allOk;
+}
+
+function clearCardIntervals(appendTo) {
+    const map = appendTo ? getState(appendTo).intervals : intervals;
+    map.forEach((intervalId) => clearInterval(intervalId));
+    map.clear();
 }
 
 export function clearAllIntervals(appendTo) {
@@ -892,46 +978,39 @@ export function clearAllIntervals(appendTo) {
         state.pathControls.forEach(ctrl => { if (ctrl && ctrl.cancel) ctrl.cancel(); });
         state.pathControls.clear();
         state.directionControls.clear();
+        state.graphDrawn.clear();
+        state.mustRedrawLine = true;
+        clearCardIntervals(appendTo);
+        return;
     }
-    // Intervalle stoppen
-    intervals.forEach((intervalId, id) => {
-        clearInterval(intervalId);
-    });
-    intervals.clear();
+    // Ohne Karten-Referenz (Altverhalten): alle globalen Intervalle stoppen
+    clearCardIntervals(null);
 }
 
-function performTask(entityId, hass) {
-    // Fonction à exécuter périodiquement pour chaque entité
-    //console.log(`Tâche périodique en cours pour l'entité "${entityId}"...`);
-    // Ici tu pourras ajouter la logique de récupération des données
-    
-    const historicalData = fetchHistoricalData(entityId, 24, hass); // recup sur 24h
-    
-    if (historicalData === "false") {
-        console.warn(`Impossible de récupérer l'historique pour ${entityId}.`);
-        return false; // Retourne "false" si l'historique n'a pas pu être récupéré
+async function performTask(entityId, hass) {
+    // Historie der letzten 24h abrufen (wartet jetzt korrekt auf das Ergebnis)
+    try {
+        return (await fetchHistoricalData(entityId, 24, hass)) === true;
+    } catch (e) {
+        return false;
     }
-
-    //console.log(`Tâche périodique réussie pour ${entityId}.`);
-    return true; // Retourne "true" si tout s'est bien passé
 }
 
 async function fetchHistoricalData(entityId, periodInHours = 24, hass, numSegments = 6) {
     const now = new Date();
     const startTime = new Date(now.getTime() - periodInHours * 60 * 60 * 1000); // Période spécifiée
 
-    if (!hass || !hass.states || !hass.states[entityId]) {
-        console.error(`hass ou l'entité ${entityId} n'est pas encore disponible.`);
+    if (!hass || !hass.states || !hass.states[entityId] || typeof hass.callApi !== "function") {
         return false;
     }
 
     // URL pour l'API Home Assistant
-    const url = `history/period/${startTime.toISOString()}?filter_entity_id=${entityId}&minimal_response=true&significant_changes_only=true`;
+    const url = `history/period/${startTime.toISOString()}?filter_entity_id=${encodeURIComponent(entityId)}&minimal_response=true&no_attributes=true&significant_changes_only=true`;
 
     try {
         const response = await hass.callApi('GET', url);
 
-        if (response.length === 0 || response[0].length === 0) {
+        if (!Array.isArray(response) || response.length === 0 || !Array.isArray(response[0]) || response[0].length === 0) {
             console.log(`Aucune donnée disponible pour "${entityId}" dans la période de ${periodInHours} heure(s).`);
             return false;
         }
@@ -941,10 +1020,11 @@ async function fetchHistoricalData(entityId, periodInHours = 24, hass, numSegmen
         // Étape 1 : Transformer les données en un format exploitable
         const formattedData = rawData
             .map((item) => ({
-                time: new Date(item.last_changed),
-                state: parseFloat(item.state), // Conversion en nombre
+                // minimal_response: last_changed (ISO) bzw. lu (Sekunden) je nach HA-Version
+                time: new Date(item.last_changed ?? item.last_updated ?? (item.lu ? item.lu * 1000 : undefined)),
+                state: parseFloat(item.state ?? item.s), // Conversion en nombre
             }))
-            .filter((item) => !isNaN(item.state)); // Filtrer les données invalides
+            .filter((item) => !isNaN(item.state) && !isNaN(item.time.getTime())); // Filtrer les données invalides
 
         if (formattedData.length === 0) {
             console.log(`Aucune donnée valide formatée pour "${entityId}".`);
@@ -998,6 +1078,7 @@ async function fetchHistoricalData(entityId, periodInHours = 24, hass, numSegmen
         );
         
         updateGraphTriggers.set(entityId, true);
+        historicVersion.set(entityId, (historicVersion.get(entityId) || 0) + 1);
 
         return true;
     } catch (error) {
@@ -1023,43 +1104,37 @@ export const getFirstEntityName = (entities) => {
 export function getDefaultConfig(hass) {
     
     // --- CUSTOM LOGIC FOR VICTRON VRM API INTEGRATION ---
-    const vrmEntities = Object.keys(hass.states).filter(id => id.startsWith("sensor.vrm_"));
-    let vrmGrid, vrmBatterySoc, vrmBatteryPower, vrmSolar, vrmHome;
-    let vrmBatteryCurrent;
-
-    if (vrmEntities.length > 0) {
-        // Battery SOC
-        vrmBatterySoc = vrmEntities.find(id => id.includes("battery") && id.includes("soc"));
-        // Battery Power (Total or Summary)
-        vrmBatteryPower = vrmEntities.find(id => id.includes("batteries_power_total"));
-        if (!vrmBatteryPower) vrmBatteryPower = vrmEntities.find(id => id.includes("battery_power"));
-        // Battery Current
-        vrmBatteryCurrent = vrmEntities.find(id => id.includes("battery") && id.includes("current"));
-
-        // Grid Power (Multiplus AC In)
-        vrmGrid = vrmEntities.find(id => id.includes("multiplus") && id.includes("ac_in_power"));
-        
-        // Home Power (Multiplus AC Out)
-        vrmHome = vrmEntities.find(id => id.includes("multiplus") && id.includes("ac_out_power"));
-
-        // Solar Power
-        // Try PV Total Today Sensor first (it's power, despite name "Today", wait no it's energy)
-        // We need power.
-        // Solar Charger Battery Watts (Power)
-        vrmSolar = vrmEntities.find(id => id.includes("solarcharger") && id.includes("battery_watts"));
-        
-        if (!vrmSolar) {
-             // PV Inverter Power (sum of phases? No sensor for that yet, pick L1 for now or better: look for any power sensor on PV inverter)
-             vrmSolar = vrmEntities.find(id => id.includes("pvinverter") && id.includes("power"));
+    // Die Integration erzeugt entity_ids nach dem Schema "sensor.vrm_<name>"
+    // (z.B. sensor.vrm_state_of_charge, sensor.vrm_ac_input_power_l1).
+    // Bei mehreren Geräten hängt HA "_2", "_3" ... an.
+    const states = hass?.states || {};
+    const vrmEntities = Object.keys(states).filter(id => id.startsWith("sensor.vrm_"));
+    const pickVrm = (...names) => {
+        for (const name of names) {
+            const re = new RegExp(`^sensor\\.vrm_${name}(_\\d+)?$`);
+            const found = vrmEntities.filter(id => re.test(id)).sort()[0];
+            if (found) return found;
         }
-        
-        // Fallback for Grid/Home if Multiplus is missing but 'overall' stats exist?
-        // Overall stats usually have energy (kWh), not power (W).
-    }
+        return undefined;
+    };
+
+    // Battery SOC
+    const vrmBatterySoc = pickVrm("state_of_charge", "system_state_of_charge");
+    // Battery Power (Total or Summary)
+    const vrmBatteryPower = pickVrm("batteries_power_total", "battery_power");
+    // Battery Current (Richtung der Animation)
+    const vrmBatteryCurrent = pickVrm("current");
+    // Grid Power (Grid Meter gesamt, sonst MultiPlus AC In)
+    const vrmGrid = pickVrm("grid_total_power", "ac_input_power_l1");
+    // Home Power (MultiPlus AC Out)
+    const vrmHome = pickVrm("ac_output_power_l1");
+    // Solar Power (Summen-Sensoren bevorzugt)
+    const vrmSolar = pickVrm("solar_chargers_power_total", "pv_inverters_power_total", "battery_watts", "l1_power");
     // --- END CUSTOM LOGIC ---
       
-    const powerEntities = Object.keys(hass.states).filter((entityId) => {
-        const stateObj = hass.states[getFirstEntityName(entityId)];
+    const powerEntities = Object.keys(states).filter((entityId) => {
+        const stateObj = states[getFirstEntityName(entityId)];
+        if (!stateObj) return false;
         const isAvailable =
           (stateObj.state && stateObj.attributes && stateObj.attributes.device_class === "power") || stateObj.entity_id.includes("power");
         return isAvailable;
@@ -1067,7 +1142,7 @@ export function getDefaultConfig(hass) {
   
     function checkStrings(entiyId, testStrings) {
         const firstId = getFirstEntityName(entiyId);
-        const friendlyName = hass.states[firstId].attributes.friendly_name;
+        const friendlyName = states[firstId]?.attributes?.friendly_name;
         return testStrings.some((str) => firstId.includes(str) || friendlyName?.includes(str));
     }
   
@@ -1078,13 +1153,13 @@ export function getDefaultConfig(hass) {
     const firstGridPowerEntity = vrmGrid || powerEntities.filter((entityId) => checkStrings(entityId, gridPowerTestString))[0];
     const firstSolarPowerEntity = vrmSolar || powerEntities.filter((entityId) => checkStrings(entityId, solarTests))[0];
     
-    const currentEntities = Object.keys(hass.states).filter((entityId) => {
-        const stateObj = hass.states[entityId];
+    const currentEntities = Object.keys(states).filter((entityId) => {
+        const stateObj = states[entityId];
         const isAvailable = stateObj && stateObj.state && stateObj.attributes && stateObj.attributes.unit_of_measurement === "A";
         return isAvailable;
     });
-    const percentageEntities = Object.keys(hass.states).filter((entityId) => {
-        const stateObj = hass.states[entityId];
+    const percentageEntities = Object.keys(states).filter((entityId) => {
+        const stateObj = states[entityId];
         const isAvailable = stateObj && stateObj.state && stateObj.attributes && stateObj.attributes.unit_of_measurement === "%";
         return isAvailable;
     });
@@ -1127,8 +1202,9 @@ export function getDefaultConfig(hass) {
                 icon: "mdi:battery-charging",
                 name: "Battery",
                 entity: batterySocEntity ?? "",
+                ...(vrmBatteryPower ? { entity2: vrmBatteryPower } : {}),
                 anchors: "R-1",
-                gauge: "true",
+                gauge: true,
                 link: {
                     "1":{
                         start: "R-1",
@@ -1164,7 +1240,7 @@ export function getDefaultConfig(hass) {
                         start: "L-1",
                         end: "2-1_B-2",
                         entity: solarEntity ?? "",
-                        inv: "true",
+                        inv: true,
                     },
                 },
             },

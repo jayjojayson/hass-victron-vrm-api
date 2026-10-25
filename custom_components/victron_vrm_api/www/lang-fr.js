@@ -48,6 +48,8 @@ export default {
     start: "Départ",
     end: "Arrivée",
     entity_picker: "Choisir une entité",
-    reverse: "inversion"
+    reverse: "inversion",
+    link_title: "Lien",
+    delete_link: "Supprimer le lien"
   }
 };

@@ -1,7 +1,7 @@
 export function css(user) {
     var css =`
     
-        #sl-tab-content {
+        #tab-panel {
               display: flex;
               flex-direction: column;
               height: 100%;
@@ -111,27 +111,107 @@ export function css(user) {
                 overflow: visible;
             }
             
-            /* Style sl-tab to look like tabs (buttons) */
-            sl-tab {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: 10px 16px;
-                cursor: pointer;
+            /* --- Tabs (eigene Buttons, unabhängig von HA-internen Komponenten) --- */
+            .vrm-tabs {
+                display: flex;
+                flex-wrap: wrap;
+                border-bottom: 1px solid var(--divider-color, #444);
+                margin-bottom: 4px;
+            }
+
+            .vrm-subtabs {
+                margin-top: 8px;
+            }
+
+            .vrm-tab {
+                appearance: none;
+                background: none;
+                border: none;
+                border-bottom: 2px solid transparent;
+                margin-bottom: -1px;
+                color: var(--secondary-text-color);
+                font: inherit;
                 font-weight: 500;
                 text-transform: uppercase;
-                border-bottom: 2px solid transparent;
-                transition: all 0.3s ease;
+                letter-spacing: 0.04em;
+                padding: 10px 16px;
                 min-height: 40px;
+                cursor: pointer;
+                transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
             }
-            
-            sl-tab:hover {
-                background-color: rgba(var(--rgb-primary-text-color), 0.05);
+
+            .vrm-tab:hover {
+                background-color: rgba(var(--rgb-primary-text-color, 255, 255, 255), 0.05);
+                color: var(--primary-text-color);
             }
-            
-            sl-tab[active] {
+
+            .vrm-tab[active] {
                 border-bottom-color: var(--primary-color);
                 color: var(--primary-color);
+            }
+
+            .vrm-tab-panel {
+                padding: 0 4px;
+            }
+
+            /* --- Eingabefelder (ersetzen ha-textfield, in HA 2026.10 entfernt) --- */
+            .vrm-field {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                min-width: 0;
+            }
+
+            .vrm-field-label {
+                font-size: 0.85em;
+                color: var(--secondary-text-color);
+            }
+
+            .vrm-input {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 10px 8px;
+                font: inherit;
+                background: var(--input-fill-color, var(--secondary-background-color, #1c2536));
+                color: var(--primary-text-color);
+                border: 1px solid var(--divider-color, #404040);
+                border-radius: 4px;
+                outline: none;
+            }
+
+            .vrm-input:focus {
+                border-color: var(--primary-color);
+            }
+
+            .vrm-input:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            /* --- Radio-Buttons (ersetzen ha-radio/ha-formfield) --- */
+            .radio-group {
+                flex-wrap: wrap;
+                gap: 6px 16px;
+            }
+
+            .vrm-radio {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                cursor: pointer;
+                color: var(--primary-text-color);
+            }
+
+            .vrm-radio input[type="radio"] {
+                accent-color: var(--primary-color);
+                width: 18px;
+                height: 18px;
+                margin: 0;
+                cursor: pointer;
+            }
+
+            input[type="range"] {
+                accent-color: var(--primary-color);
             }
             
   `

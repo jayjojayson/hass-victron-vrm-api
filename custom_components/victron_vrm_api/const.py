@@ -12,6 +12,7 @@ CONF_PV_INVERTER_INSTANCE = "pv_instance_ids"       # Instance IDs des PV Invert
 CONF_TANK_INSTANCE = "tank_instance_ids"            # Instance IDs des Tanks (String: '300')
 CONF_SOLAR_CHARGER_INSTANCE = "solar_charger_ids"   # Instance IDs des Solar Chargers (String: '400, 401')
 CONF_GRID_INSTANCE = "grid_instance_ids"            # Instance IDs des Grid Meters (String: '30')
+CONF_OTHER_INSTANCE = "other_instance_ids"          # Weitere Geräte über Diagnostics (Temperatur, GPS, Orion XS, EVCS ...)
 
 # Standard-Aktualisierungsintervalle (in Sekunden)
 DEFAULT_SCAN_INTERVAL_BATTERY = 20           # 20 Sekunden
@@ -22,3 +23,4 @@ DEFAULT_SCAN_INTERVAL_SOLAR_CHARGER = 20     # 20 Sekunden
 DEFAULT_SCAN_INTERVAL_OVERALL = 300          # 5 Minuten
 DEFAULT_SCAN_INTERVAL_SYSTEM_OVERVIEW = 1200 # 20 Minuten 
 DEFAULT_SCAN_INTERVAL_DIAGNOSTICS = 60       # 60 Sekunden
+DEFAULT_SCAN_INTERVAL_FORECAST = 3600        # 60 Minuten (VRM aktualisiert Prognosen stündlich)

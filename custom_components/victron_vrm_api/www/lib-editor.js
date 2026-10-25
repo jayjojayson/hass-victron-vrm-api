@@ -15,21 +15,90 @@ export const eventHandlers = new WeakMap();
 /* de l'editeur graphique             */
 /**************************************/
 let translations = {}; // Stocke les traductions chargées
+let fallbackTranslations = {}; // Englisch als Rückfall für fehlende Schlüssel
+export let loadedLanguage = null;
+
+const SUPPORTED_LANGUAGES = ["de", "en", "fr"];
+const FILE_VERSION = "1.9"; // bei jedem Release erhöhen (Cache-Busting)
 
 export async function loadTranslations(appendTo) {
-    const lang = appendTo._hass?.language || "en"; // Langue HA, ou "en" par défaut
+    // HA liefert z.B. "de", "en-GB", "fr-CA" → auf Basissprache reduzieren
+    const fullLang = appendTo._hass?.language || appendTo._hass?.locale?.language || "en";
+    const baseLang = String(fullLang).toLowerCase().split(/[-_]/)[0];
+    const lang = SUPPORTED_LANGUAGES.includes(baseLang) ? baseLang : "en";
+
+    if (lang === loadedLanguage && Object.keys(translations).length) return;
+
     try {
-        const response = await import(`./lang-${lang}.js`);
-        translations = response.default;
+        fallbackTranslations = (await import(`./lang-en.js?v=${FILE_VERSION}`)).default || {};
+        translations = lang === "en" ? fallbackTranslations : ((await import(`./lang-${lang}.js?v=${FILE_VERSION}`)).default || {});
+        loadedLanguage = lang;
     } catch (error) {
-        console.error("Erreur de chargement de la langue :", error);
-        const response = await import(`./lang-en.js`);
-        translations = {};
+        console.error("Victron VRM API Card: Sprachdatei konnte nicht geladen werden:", error);
+        translations = fallbackTranslations;
+        loadedLanguage = "en";
     }
 }
 
 export function t(func, key) {
-    return translations?.[func]?.[key] || `⚠️ ${func}.${key} ⚠️`; // Si absent, affiche une alerte visuelle
+    return translations?.[func]?.[key] || fallbackTranslations?.[func]?.[key] || key;
+}
+
+/* "true"/true → true */
+function isTrue(value) {
+    return value === true || value === "true";
+}
+
+/* Anker-String "L-1, B-2" robust zerlegen (auch ohne Leerzeichen) */
+function splitAnchors(anchorsValue) {
+    if (!anchorsValue) return [];
+    return String(anchorsValue)
+        .split(/\s*,\s*/)
+        .map((a) => a.trim())
+        .filter((a) => /^[LTBR]-\d+$/.test(a));
+}
+
+/**
+ * Eingabefeld mit Label als natives <input>.
+ * HA 2026.10 hat `ha-textfield`, `ha-radio` und `ha-formfield` (Material-Komponenten)
+ * entfernt bzw. ersetzt → diese Felder waren im Editor unsichtbar. Native Inputs
+ * mit HA-Theme-Variablen funktionieren unabhängig von der HA-Version.
+ */
+function createField({ id, path, label, type = 'text', value, min, max, step, group, disabled, className = '' }) {
+    const wrapper = document.createElement('label');
+    wrapper.className = `vrm-field ${className}`.trim();
+    const span = document.createElement('span');
+    span.className = 'vrm-field-label';
+    span.textContent = label ?? '';
+    const input = document.createElement('input');
+    input.className = 'vrm-input';
+    input.type = type;
+    if (id) input.id = id;
+    if (path) input.dataset.path = path;
+    if (group) input.dataset.group = group;
+    if (min !== undefined) input.min = String(min);
+    if (max !== undefined) input.max = String(max);
+    if (step !== undefined) input.step = String(step);
+    if (value !== undefined && value !== null) input.value = String(value);
+    if (disabled) input.disabled = true;
+    wrapper.appendChild(span);
+    wrapper.appendChild(input);
+    return wrapper;
+}
+
+/* ha-switch: Attribut UND Property setzen (alte + neue HA-Versionen) */
+function setSwitchChecked(sw, checked) {
+    if (checked) sw.setAttribute('checked', '');
+    else sw.removeAttribute('checked');
+    try { sw.checked = !!checked; } catch (e) { /* ignore */ }
+}
+
+/* aktiven Tab (Attribut "active") in einer Tab-Leiste setzen */
+function setActiveTab(selector, index, appendTo) {
+    appendTo.shadowRoot.querySelectorAll(selector).forEach((tab) => {
+        if (parseInt(tab.getAttribute('data-tab'), 10) === index) tab.setAttribute('active', '');
+        else tab.removeAttribute('active');
+    });
 }
 
 /***************************************/
@@ -79,15 +148,18 @@ export function tab1Render(appendTo) {
     const defaultTheme = appendTo._config.theme || 'auto';
     
     themeOptions.forEach(option => {
-      const formfield = document.createElement('ha-formfield');
-      formfield.setAttribute('label', option.label);
-      formfield.classList.add('cell');
-      const radio = document.createElement('ha-radio');
-      radio.setAttribute('name', 'themeSelect');
-      radio.setAttribute('data-path', 'theme');
-      radio.setAttribute('value', option.value);
-      if (defaultTheme  === option.value) radio.setAttribute('checked', '');
+      const formfield = document.createElement('label');
+      formfield.classList.add('vrm-radio');
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'themeSelect';
+      radio.dataset.path = 'theme';
+      radio.value = option.value;
+      if (defaultTheme === option.value) radio.checked = true;
+      const span = document.createElement('span');
+      span.textContent = option.label;
       formfield.appendChild(radio);
+      formfield.appendChild(span);
       radioGroup.appendChild(formfield);
     });
     
@@ -111,17 +183,17 @@ export function tab1Render(appendTo) {
     const devicesRowContainer = document.createElement('div');
     devicesRowContainer.classList.add('row');
     devicesInputs.forEach(input => {
-      const textfield = document.createElement('ha-textfield');
-      textfield.classList.add('cell');
-      textfield.setAttribute('id', input.id);
-      textfield.setAttribute('data-path', `param.${input.id}`);
-      textfield.setAttribute('label', input.label);
-      textfield.setAttribute('value', input.value);
-      textfield.setAttribute('type', 'number');
-      textfield.setAttribute('min', input.min);
-      textfield.setAttribute('max', input.max);
-      textfield.setAttribute('step', input.step);
-      devicesRowContainer.appendChild(textfield);
+      devicesRowContainer.appendChild(createField({
+        id: input.id,
+        path: `param.${input.id}`,
+        label: input.label,
+        type: 'number',
+        value: input.value,
+        min: input.min,
+        max: input.max,
+        step: input.step,
+        className: 'cell',
+      }));
     });
     devicesRow.appendChild(devicesLabel);
     devicesRow.appendChild(devicesRowContainer);
@@ -157,23 +229,19 @@ export function tab1Render(appendTo) {
     
       const inputCell = document.createElement('div');
       inputCell.classList.add('cell', 'right');
-      const textfield = document.createElement('ha-textfield');
-      textfield.setAttribute('id', section.id);
-      textfield.setAttribute('data-path', `styles.${section.path}`);
-      textfield.setAttribute('data-group', section.path);
-      textfield.setAttribute('label', t("tab1Render", "font_size"));
-      textfield.setAttribute('type', 'number');
-      textfield.setAttribute('min', 1);
-      textfield.setAttribute('step', 1);
-    
       // Vérifie si la clé existe avant de définir sa valeur ou d'activer le champ
-      if (appendTo._config.styles && appendTo._config.styles[section.path]) {
-        if (appendTo._config.styles[section.path] === 'auto') {
-          textfield.setAttribute('disabled', '');
-        } else {
-          textfield.setAttribute('value', appendTo._config.styles[section.path]);
-        }
-      }
+      const styleValue = appendTo._config.styles?.[section.path];
+      const textfield = createField({
+        id: section.id,
+        path: `styles.${section.path}`,
+        group: section.path,
+        label: t("tab1Render", "font_size"),
+        type: 'number',
+        min: 1,
+        step: 1,
+        value: styleValue && styleValue !== 'auto' ? styleValue : undefined,
+        disabled: styleValue === 'auto',
+      });
       
       inputCell.appendChild(textfield);
       sectionRow.appendChild(inputCell);
@@ -187,9 +255,7 @@ export function tab1Render(appendTo) {
       fontSwitch.setAttribute('data-group', section.path);
     
       // Activer le switch uniquement si la clé existe et que sa valeur est "auto"
-      if (appendTo._config.styles && appendTo._config.styles[section.path] === 'auto') {
-        fontSwitch.setAttribute('checked', '');
-      }
+      setSwitchChecked(fontSwitch, appendTo._config.styles?.[section.path] === 'auto');
     
       switchContainer.appendChild(fontSwitch);
       switchCell.appendChild(switchContainer);
@@ -278,35 +344,35 @@ export function tab1Render(appendTo) {
 /**********************************************/
 export function tabColRender(col, appendTo) {
     
-    const boxCol = appendTo._config.param[`boxCol${col}`] ?? 1;
+    const maxBox = col === 2 ? 2 : 4;
+    const rawBoxCol = parseInt(appendTo._config.param?.[`boxCol${col}`], 10);
+    const boxCol = isNaN(rawBoxCol) ? 1 : Math.min(Math.max(rawBoxCol, 1), maxBox);
+
+    // Unter-Tab darf nicht größer sein als die Anzahl Boxen dieser Spalte
+    if (typeof appendTo._currentSubTab !== 'number' || appendTo._currentSubTab >= boxCol || appendTo._currentSubTab < 0) {
+        appendTo._currentSubTab = 0;
+    }
     
     const tabContent = appendTo.shadowRoot.querySelector('#tab-content');
     tabContent.innerHTML = '';
 
     let tabsHTML = ''; // Initialise une variable pour stocker les onglets
     for (let i = 1; i <= boxCol; i++) {
-        tabsHTML += `<sl-tab slot="nav" panel="anchor" label="1-${i}" data-tab="${i - 1}">${col}-${i}</sl-tab>`;
+        tabsHTML += `<button type="button" class="vrm-tab" data-tab="${i - 1}"${(i - 1) === appendTo._currentSubTab ? ' active' : ''}>${col}-${i}</button>`;
     }
             
     tabContent.innerHTML = `
         <div class="devices-editor">
-            <sl-tab-group id="subTab-group">
+            <div id="subTab-group" class="vrm-tabs vrm-subtabs">
                 ${tabsHTML}
-            </sl-tab-group>
+            </div>
         
-            <sl-tab-panel id="sl-subTab-content" name="anchor">
-              <div id="subTab-content" class="subTab-content">
+            <div id="subTab-content" class="subTab-content">
                 <!-- Le contenu de la section active sera affiché ici -->
-              </div>
-            </sl-tab-panel>
+            </div>
         </div>
     `;
             
-    const tabBar = tabContent.querySelector('#subLink-container');
-    if (tabBar && typeof appendTo._currentSubTab === 'number') {
-        tabBar.activeIndex = appendTo._currentSubTab; // Définit l'onglet actif
-    }
-    
     attachSubLinkClick(appendTo);
     renderSubTabContent(col, appendTo);
 }
@@ -335,7 +401,7 @@ export function subtabRender(box, config, hass, appendTo) {
     let leftQty = 0, topQty = 0, bottomQty = 0, rightQty = 0;
     
     // Vérifier si les ancres existent dans la configuration
-    const anchors = config?.devices?.[box]?.anchors ? String(config?.devices?.[box]?.anchors).split(', ') : [];
+    const anchors = splitAnchors(config?.devices?.[box]?.anchors);
     
     let thisAllAnchors = [];
 
@@ -372,12 +438,13 @@ export function subtabRender(box, config, hass, appendTo) {
                         data-path="devices.${box}.icon"
                     >
                     </ha-icon-picker>
-                    <ha-textfield 
-                        class="cell"
-                        label="${t("subtabRender", "name_choice")}"
-                        id="device_name"
-                        data-path="devices.${box}.name"
-                    ></ha-textfield>
+                    <label class="vrm-field cell">
+                        <span class="vrm-field-label">${t("subtabRender", "name_choice")}</span>
+                        <input class="vrm-input" type="text"
+                            id="device_name"
+                            data-path="devices.${box}.name"
+                        >
+                    </label>
                 </div>
             </div>
         </ha-expansion-panel>
@@ -552,15 +619,15 @@ export function subtabRender(box, config, hass, appendTo) {
     footerEntity2.hass = hass; // Passe l'objet directement ici
     footerEntity3.hass = hass; // Passe l'objet directement ici
            
-    if (config?.devices?.[box]?.graph === true) graphSwitch.setAttribute('checked', '');
+    setSwitchChecked(graphSwitch, isTrue(config?.devices?.[box]?.graph));
     
-    const entity = hass.states?.[entityPicker.value];
+    const entity = hass?.states?.[entityPicker.value];
     const unit = entity?.attributes?.unit_of_measurement;
 
     if(unit !== '%' ) {
         gaugeSwitch.setAttribute('disabled', '');
         gaugeSwitch.setAttribute("title", t("subtabRender", "warning_gauge"));
-    } else if (config.devices?.[box]?.gauge === true) gaugeSwitch.setAttribute('checked', '');
+    } else setSwitchChecked(gaugeSwitch, isTrue(config.devices?.[box]?.gauge));
     
     
     const linkContainer = subTabContent.querySelector('#link-container');
@@ -573,7 +640,14 @@ export function subtabRender(box, config, hass, appendTo) {
     });
     
     addLinkButton.addEventListener('click', (e) => {
-        addLink(linkContainer.children.length+1, box, hass, thisAllAnchors, OtherAllAnchors, appendTo);
+        // Nächsten freien Index verwenden (nach dem Löschen eines Links wurde
+        // sonst ein bestehender Link überschrieben)
+        const existing = Object.keys(appendTo._config.devices?.[box]?.link || {})
+            .concat(Array.from(linkContainer.querySelectorAll('[data-link-index]')).map(el => el.dataset.linkIndex))
+            .map(k => parseInt(k, 10))
+            .filter(n => !isNaN(n));
+        const nextIndex = existing.length ? Math.max(...existing) + 1 : 1;
+        addLink(nextIndex, box, hass, thisAllAnchors, OtherAllAnchors, appendTo);
     });
     
     function trackExpansionState() {
@@ -598,7 +672,7 @@ export function getAllAnchorsExceptCurrent(config, currentBox) {
     Object.entries(config.devices || {}).forEach(([boxKey, device]) => {
         if (boxKey === currentBox || !device.anchors) return; // On saute le device en cours
 
-        const anchors = String(device.anchors).split(', ');
+        const anchors = splitAnchors(device.anchors);
 
         anchors.forEach((anchor) => {
             const [side, qtyStr] = anchor.split('-'); // Exemple : "L-2" → ["L", "2"]
@@ -624,6 +698,7 @@ export function addLink(index, box, hass, thisAllAnchors, OtherAllAnchors, appen
     panel.setAttribute('outlined', '');
     panel.setAttribute('expanded', '');
     panel.setAttribute('style', 'margin: 0px 0px 8px 0px');
+    panel.dataset.linkIndex = String(index);
         
     const _curStart = appendTo._config.devices?.[box]?.link?.[index]?.start ?? "";
     const _curEnd   = appendTo._config.devices?.[box]?.link?.[index]?.end   ?? "";
@@ -633,12 +708,12 @@ export function addLink(index, box, hass, thisAllAnchors, OtherAllAnchors, appen
 
     panel.innerHTML = `
         <div slot="header" style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Lien ${index}</span>
-            <ha-icon-button id="add-link-button" aria-label="Ajouter un lien">
+            <span>${t("addLink", "link_title")} ${index}</span>
+            <ha-icon-button class="delete-link-button" aria-label="${t("addLink", "delete_link")}" title="${t("addLink", "delete_link")}">
                 <ha-icon icon="mdi:trash-can" style="display: flex;"></ha-icon>
             </ha-icon-button>
         </div>
-        <div id="link-container" class="inner">
+        <div class="inner">
             <div class="col">
                 <div class="row">
                     <div class="col cell">
@@ -678,8 +753,9 @@ export function addLink(index, box, hass, thisAllAnchors, OtherAllAnchors, appen
     
     const path = `devices.${box}.link.${index}`;
 
-    const deleteButton = panel.querySelector('ha-icon-button');
-    deleteButton.addEventListener('click', () => {
+    const deleteButton = panel.querySelector('.delete-link-button');
+    deleteButton.addEventListener('click', (ev) => {
+        ev.stopPropagation(); // Panel nicht auf-/zuklappen
         appendTo._config = updateConfigRecursively(appendTo._config, path, null, true);
         notifyConfigChange(appendTo);
         panel.remove();
@@ -691,10 +767,10 @@ export function addLink(index, box, hass, thisAllAnchors, OtherAllAnchors, appen
     entityLink.selector = { entity: {} };
     entityLink.required = false;
     entityLink.hass = hass;
-    entityLink.value = appendTo._config.devices[box]?.link?.[index]?.entity ?? "";
+    entityLink.value = appendTo._config.devices?.[box]?.link?.[index]?.entity ?? "";
 
     const invLink = panel.querySelector(`#inv_link_${index}`);
-    if (appendTo._config.devices[box]?.link?.[index]?.inv === true) invLink.setAttribute('checked', '');
+    setSwitchChecked(invLink, isTrue(appendTo._config.devices?.[box]?.link?.[index]?.inv));
     
     attachLinkInputs(appendTo)
         
@@ -712,14 +788,13 @@ export function attachLinkInputs(appendTo) {
                 appendTo._config = updateConfigRecursively(appendTo._config, key, value, true);
                 notifyConfigChange(appendTo);
             }
-            document.dispatchEvent(new CustomEvent('config-changed', { detail: { redrawRequired: true } }));
         };
         selectEl.addEventListener('change', handleChange);
         eventHandlers.set(selectEl, handleChange);
     });
     
     // Listener pour les `ha-textfield` sauf les champs "anchor"
-    appendTo.shadowRoot.querySelectorAll('ha-textfield').forEach((textField) => {
+    appendTo.shadowRoot.querySelectorAll('input.vrm-input').forEach((textField) => {
         
         if (eventHandlers.has(textField)) {
             //console.log("Événement déjà attaché à cet élément ha-textfield :", textField);
@@ -753,11 +828,6 @@ export function attachLinkInputs(appendTo) {
                 notifyConfigChange(appendTo);
             }
             
-            // Émettre un événement personnalisé pour signaler que la configuration a changé
-            const event = new CustomEvent('config-changed', {
-                detail: { redrawRequired: true }
-            });
-            document.dispatchEvent(event);
         };
         
         // Ajouter l'événement
@@ -779,18 +849,14 @@ export function attachLinkInputs(appendTo) {
         // Créer un nouveau gestionnaire d'événements
         const handleChange = (e) => {
             const key = toggle.dataset.path;
-            const value = e.target.checked ? true : null; // `true` si activé, `null` pour suppression
+            const isOn = typeof toggle.checked === 'boolean' ? toggle.checked : !!e.target.checked;
+            const value = isOn ? true : null; // `true` si activé, `null` pour suppression
             
             if (key) {
                 appendTo._config = updateConfigRecursively(appendTo._config, key, value, true); // Suppression si désactivé
                 notifyConfigChange(appendTo);
             }
             
-            // Émettre un événement personnalisé pour signaler que la configuration a changé
-            const event = new CustomEvent('config-changed', {
-                detail: { redrawRequired: true }
-            });
-            document.dispatchEvent(event);
         };
         
         // Ajouter l'événement
@@ -810,7 +876,7 @@ export function attachLinkInputs(appendTo) {
 export function attachInputs(appendTo) {
         
     // Listener pour les `ha-textfield` sauf les champs "anchor"
-    appendTo.shadowRoot.querySelectorAll('ha-textfield:not(.anchor)').forEach((textField) => {
+    appendTo.shadowRoot.querySelectorAll('input.vrm-input').forEach((textField) => {
         
         if (eventHandlers.has(textField)) {
             //console.log("Événement déjà attaché à cet élément ha-textfield :", textField);
@@ -881,7 +947,7 @@ export function attachInputs(appendTo) {
             } else {
                 appendTo._config = updateConfigRecursively(appendTo._config, key, null, true);
             }
-            notifyConfigChange(appendTo);
+            notifyConfigChange(appendTo, true); // Link-Auswahl hängt von den Ankern ab
         };
         
         inputEl.addEventListener('change', handleChange);
@@ -900,18 +966,22 @@ export function attachInputs(appendTo) {
         // Créer un nouveau gestionnaire d'événements
         const handleChange = (e) => {
             const key = toggle.dataset.path;
-            const value = e.target.checked ? true : null; // `true` si activé, `null` pour suppression
+            const isOn = typeof toggle.checked === 'boolean' ? toggle.checked : !!e.target.checked;
+            const value = isOn ? true : null; // `true` si activé, `null` pour suppression
             const group = toggle.dataset.group;
-            const isChecked = e.target.checked;
+            const isChecked = isOn;
             
             if (group) {
                 // Trouver le champ texte associé au switch
-                const textField = appendTo.shadowRoot.querySelector(`ha-textfield[data-group="${group}"]`);
+                const textField = appendTo.shadowRoot.querySelector(`input.vrm-input[data-group="${group}"]`);
+                if (!textField) return;
                 const key2 = textField.dataset.path;
         
                 if (isChecked) {
+                  textField.disabled = true;
                   appendTo._config = updateConfigRecursively(appendTo._config, key2, "auto"); // Définir sur "auto"
                 } else {
+                    textField.disabled = false;
 
                     const value = textField.value && !isNaN(parseInt(textField.value, 10)) 
                     ? parseInt(textField.value, 10) 
@@ -939,7 +1009,7 @@ export function attachInputs(appendTo) {
     });
     
     // Listener pour les `ha-radio`
-    appendTo.shadowRoot.querySelectorAll('ha-radio').forEach((radio) => {
+    appendTo.shadowRoot.querySelectorAll('input[type="radio"][data-path]').forEach((radio) => {
         
         if (eventHandlers.has(radio)) {
             //console.log("Événement déjà attaché à cet élément ha-radio :", radio);
@@ -1008,7 +1078,9 @@ export function attachInputs(appendTo) {
                 notifyConfigChange(appendTo);
             }
         };
-        colorInput.addEventListener('input', handleChange);
+        // "change" statt "input": sonst wird bei jeder Mausbewegung im Farbwähler
+        // die Konfiguration gespeichert und der Editor neu gerendert (Picker schließt sich)
+        colorInput.addEventListener('change', handleChange);
         eventHandlers.set(colorInput, handleChange);
     });
 
@@ -1041,13 +1113,14 @@ export function attachInputs(appendTo) {
             let value = e.detail.value;
             
             // Si la valeur est une chaîne vide, traiter comme suppression de l'icône
-            if (!value || value.trim() === "") {
+            if (!value || String(value).trim() === "") {
                 value = null; // Marquer pour suppression dans le YAML
             }
             
             if (key) {
                 appendTo._config = updateConfigRecursively(appendTo._config, key, value, true);
-                notifyConfigChange(appendTo);
+                // Haupt-Entität bestimmt, ob die %-Anzeige (gauge) aktivierbar ist
+                notifyConfigChange(appendTo, /\.entity$/.test(key) && !/\.link\./.test(key));
             }
         }
         
@@ -1120,16 +1193,21 @@ export function updateConfigRecursively(obj, path, value, removeIfNull = false) 
 /***********************************/
 /* fonction de mise à jour du yaml */
 /***********************************/
-export function notifyConfigChange(appendTo) {
-    const event = new Event('config-changed', {
+export function notifyConfigChange(appendTo, rerender = false) {
+    // Merken, was wir selbst gesendet haben → setConfig() kann dann ein
+    // komplettes Neu-Rendern (Fokusverlust, zugeklappte Panels) überspringen.
+    // rerender=true erzwingt das Neu-Rendern (z.B. wenn sich Anker oder die
+    // Haupt-Entität ändern und davon abhängige Felder aktualisiert werden müssen).
+    try {
+        appendTo._lastEmittedConfig = rerender ? null : JSON.stringify(appendTo._config);
+    } catch (e) {
+        appendTo._lastEmittedConfig = null;
+    }
+    appendTo.dispatchEvent(new CustomEvent('config-changed', {
         bubbles: true,
         composed: true,
-    });
-    
-    //console.log(appendTo._config);
-    
-    event.detail = { config: appendTo._config };
-    appendTo.dispatchEvent(event);
+        detail: { config: appendTo._config },
+    }));
 }
 
 /********************************/
@@ -1137,16 +1215,14 @@ export function notifyConfigChange(appendTo) {
 /* dans les onglets principaux  */
 /********************************/
 export function attachLinkClick(renderTabContent, appendTo) {
-    appendTo.shadowRoot.querySelectorAll('#tab-group sl-tab').forEach((link) => {
-        if (eventHandlers.has(link)) {
-            console.log("Événement déjà attaché à cet élément #link-container mwc-tab :", link);
-            return;
-        }
+    appendTo.shadowRoot.querySelectorAll('#tab-group .vrm-tab').forEach((link) => {
+        if (eventHandlers.has(link)) return;
 
         const handleClick = (e) => {
             const tab = parseInt(e.currentTarget.getAttribute('data-tab'), 10);
             appendTo._currentTab = tab;
             appendTo._currentSubTab = 0;
+            setActiveTab('#tab-group .vrm-tab', tab, appendTo);
             renderTabContent(appendTo); // Appelle la fonction passée en paramètre
         };
 
@@ -1160,15 +1236,13 @@ export function attachLinkClick(renderTabContent, appendTo) {
 /* dans les onglets secondaires */
 /********************************/
 export function attachSubLinkClick(appendTo) {
-    appendTo.shadowRoot.querySelectorAll('#subTab-group sl-tab').forEach((sublink) => {
-        if (eventHandlers.has(sublink)) {
-            console.log("Événement déjà attaché à cet élément #sublink-container mwc-tab :", sublink);
-            return;
-        }
+    appendTo.shadowRoot.querySelectorAll('#subTab-group .vrm-tab').forEach((sublink) => {
+        if (eventHandlers.has(sublink)) return;
 
         const handleClick = (e) => {
             const tab = parseInt(e.currentTarget.getAttribute('data-tab'), 10);
             appendTo._currentSubTab = tab;
+            setActiveTab('#subTab-group .vrm-tab', tab, appendTo);
             renderSubTabContent(appendTo._currentTab, appendTo);
         };
 

@@ -139,8 +139,16 @@ If you like the Integration, I would appreciate a Star rating ⭐ from you. 🤗
 | **Overall Stats** | * Total Consumption | `total_consumption` | kWh | Total Consumption (for selected period) |
 | **Overall Stats** | * Grid Energy In | `grid_history_from` | kWh | Energy from Grid (for selected period) |
 | **Overall Stats** | * Grid Energy Out | `grid_history_to` | kWh | Energy to Grid (for selected period) |
+| **Overall Stats** | * Solar Forecast Today / Remaining Today / Tomorrow | `solar_yield_forecast` | kWh | VRM Solar Forecast (`stats?type=forecast`) |
+| **Overall Stats** | * Consumption Forecast Today / Tomorrow | `vrm_consumption_fc` | kWh | VRM Consumption Forecast |
+| **Other Devices** | *(one sensor per VRM value)* | `idDataAttribute` | auto | Any device from the VRM diagnostics (temperature sensors / RuuviTag, GPS, Orion XS, EV charger, …) |
 
 *(The **Overall Stats** Entities are build for Periods **Today, Week, Month and Year**.)*
+
+### Other devices (temperature sensors, GPS, Orion XS, EV charger …)
+Devices without their own VRM widget can be added via the field **"Other devices - instance_id"**.
+Enter the instance ID shown in the VRM device list (e.g. `20, 21`). The integration then creates one device per instance and
+device type, with one sensor for every value the VRM API delivers for it (name and unit are taken from VRM).
 
 </details>
 

@@ -12,7 +12,8 @@
           "pv_instance_ids": "PV Inverter - instance_id (AC/1-3Ph) (optional)",
           "tank_instance_ids": "Tank - instance_id (optional)",
           "solar_charger_ids": "Solar Charger - instance_id (DC/MPPT) (optional)",
-          "grid_instance_ids": "Grid Meter - instance_id (optional)"
+          "grid_instance_ids": "Grid Meter - instance_id (optional)",
+          "other_instance_ids": "Other devices (temperature, GPS, Orion XS, EV charger …) - instance_id (optional)"
         }
       },
       "reconfigure": {
@@ -25,7 +26,8 @@
           "pv_instance_ids": "PV Inverter - instance_id (AC/1-3Ph) (optional)",
           "tank_instance_ids": "Tank - instance_id (optional)",
           "solar_charger_ids": "Solar Charger - instance_id (DC/MPPT) (optional)",
-          "grid_instance_ids": "Grid Meter - instance_id (optional)"
+          "grid_instance_ids": "Grid Meter - instance_id (optional)",
+          "other_instance_ids": "Other devices (temperature, GPS, Orion XS, EV charger …) - instance_id (optional)"
         }
       },
       "reconfigure_successful": {

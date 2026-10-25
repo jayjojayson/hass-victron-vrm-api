@@ -47,6 +47,8 @@ export default {
     start: "Start",
     end: "Ende",
     entity_picker: "Wähle Entität",
-    reverse: "umkehren"
+    reverse: "umkehren",
+    link_title: "Link",
+    delete_link: "Link löschen"
   }
 };
