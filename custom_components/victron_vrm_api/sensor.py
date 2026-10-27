@@ -1016,6 +1016,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 )
             )
 
+    # --- 6.1 System-Leistungen (aus Diagnostics, Venus-OS "system"-Service) ---
+    # Netz gesamt, AC-Verbrauch (Haus), PV gesamt und Batterieleistung so, wie Venus OS /
+    # VRM sie selbst berechnen. Funktioniert auch ohne separat konfigurierten Grid Meter
+    # und erfasst Verbraucher vor UND hinter dem MultiPlus.
+    # Ein Sensor wird nur angelegt, wenn VRM mindestens einen der dbus-Pfade liefert.
+    if isinstance(diagnostics_coord.data, list):
+        available_paths = {
+            rec.get("dbusPath")
+            for rec in diagnostics_coord.data
+            if isinstance(rec, dict) and rec.get("dbusServiceType") == "system"
+        }
+        for key, (name, paths, icon) in SYSTEM_POWER_SENSORS.items():
+            if available_paths.intersection(paths):
+                entities.append(
+                    VrmSystemPowerSensor(
+                        diagnostics_coord, site_id, key, name, paths, icon, system_overview_device_info
+                    )
+                )
+            else:
+                _LOGGER.debug("System-Sensor %s: keine passenden VRM-Werte gefunden", name)
+
     # --- 7. Grid Meter Sensoren (aus Diagnostics, Manuell Konfiguriert) ---
     if grid_instance_ids:
         # Wir iterieren über die konfigurierten Instanz-IDs
@@ -1808,6 +1829,71 @@ class VrmGridTotalPowerSensor(SensorEntity):
             
         return round(l1 + l2 + l3, 2)
         
+
+# --- 14.1 System Power Sensor (Summe über dbus-Pfade des system-Service) --------
+_PHASES = ("L1", "L2", "L3")
+
+# key -> (Name, dbus-Pfade des Venus-OS-"system"-Service, Icon)
+SYSTEM_POWER_SENSORS = {
+    "system_grid_power": (
+        "System Grid Power",
+        [f"/Ac/Grid/{p}/Power" for p in _PHASES],
+        "mdi:transmission-tower",
+    ),
+    "system_ac_consumption": (
+        "System AC Consumption",
+        [f"/Ac/Consumption/{p}/Power" for p in _PHASES],
+        "mdi:home-lightning-bolt",
+    ),
+    "system_pv_power": (
+        "System PV Power",
+        ["/Dc/Pv/Power"]
+        + [f"/Ac/PvOnGrid/{p}/Power" for p in _PHASES]
+        + [f"/Ac/PvOnOutput/{p}/Power" for p in _PHASES]
+        + [f"/Ac/PvOnGenset/{p}/Power" for p in _PHASES],
+        "mdi:solar-power-variant",
+    ),
+    "system_battery_power": (
+        "System Battery Power",
+        ["/Dc/Battery/Power"],
+        "mdi:battery-charging",
+    ),
+}
+
+
+class VrmSystemPowerSensor(VrmBaseSensor):
+    """Summiert die Leistungswerte (W) des system-Service über mehrere dbus-Pfade."""
+
+    def __init__(self, coordinator, site_id, key, name, paths, icon, device_info):
+        super().__init__(
+            coordinator, site_id, key, name, SensorDeviceClass.POWER,
+            SensorStateClass.MEASUREMENT, "W", icon, device_info, precision=0,
+        )
+        self._paths = set(paths)
+        self._attr_extra_state_attributes = {"dbus_paths": list(paths)}
+
+    @property
+    def native_value(self):
+        records = self.coordinator.data
+        if not isinstance(records, list):
+            return None
+        total = 0.0
+        found = False
+        seen: set[str] = set()
+        for item in records:
+            if not isinstance(item, dict) or item.get("dbusServiceType") != "system":
+                continue
+            path = item.get("dbusPath")
+            if path not in self._paths or path in seen:
+                continue
+            try:
+                total += float(item.get("rawValue"))
+                seen.add(path)
+                found = True
+            except (TypeError, ValueError):
+                continue
+        return round(total, 1) if found else None
+
 
 # --- 15. Generischer Diagnostics Sensor (Weitere Geräte) -----------------------
 _FORMAT_SPEC_RE = re.compile(r"%[-+ #0]*\d*(?:\.\d+)?[a-zA-Z]")

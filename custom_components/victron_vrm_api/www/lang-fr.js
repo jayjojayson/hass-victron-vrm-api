@@ -10,7 +10,7 @@ export default {
     in_header: "dans l'en-tête",
     in_devices: "dans les Devices",
     in_footer: "dans le pied de page",
-    font_size: "Taille de la police",
+    font_size: "Taille de police (px)",
     colors_title: "Personnaliser les couleurs :",
     box_shadow_color: "Couleur de bordure de box",
     anchor_color: "Couleur des ancres",
@@ -19,7 +19,9 @@ export default {
     ball_color: "Point d'animation",
     text_main_color: "Texte valeur principale",
     text_sub_color: "Texte valeur secondaire",
-    ball_size: "Taille du point animé"
+    ball_size: "Taille du point animé",
+    history_color: "Historique (graphe)",
+    auto_size: "Auto"
   },
   subtabRender: {
     header_title: "Configuration de l'entête",
@@ -42,7 +44,14 @@ export default {
     bottom_qtyBox: "Bas",
     right_qtyBox: "Droite",
     add_links: "Ajout de liens",
-    add_link: "Ajouter un lien"
+    add_link: "Ajouter un lien",
+    footer_layout: "Disposition du footer",
+    layout_horizontal: "Horizontal",
+    layout_vertical: "Vertical",
+    footer_align: "Alignement du footer",
+    align_left: "Gauche",
+    align_center: "Centré",
+    align_right: "Droite"
   },
   addLink: {
     start: "Départ",
@@ -51,5 +60,9 @@ export default {
     reverse: "inversion",
     link_title: "Lien",
     delete_link: "Supprimer le lien"
+  },
+  tabs: {
+    general: "Conf.",
+    column: "Col."
   }
 };

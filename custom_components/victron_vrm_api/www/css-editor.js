@@ -114,7 +114,9 @@ export function css(user) {
             /* --- Tabs (eigene Buttons, unabhängig von HA-internen Komponenten) --- */
             .vrm-tabs {
                 display: flex;
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                scrollbar-width: none;
                 border-bottom: 1px solid var(--divider-color, #444);
                 margin-bottom: 4px;
             }
@@ -133,8 +135,10 @@ export function css(user) {
                 font: inherit;
                 font-weight: 500;
                 text-transform: uppercase;
-                letter-spacing: 0.04em;
-                padding: 10px 16px;
+                letter-spacing: 0.02em;
+                padding: 10px 10px;
+                flex: 1 1 auto;
+                white-space: nowrap;
                 min-height: 40px;
                 cursor: pointer;
                 transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
@@ -208,6 +212,15 @@ export function css(user) {
                 height: 18px;
                 margin: 0;
                 cursor: pointer;
+            }
+
+            select.vrm-input {
+                cursor: pointer;
+            }
+
+            .vrm-switch-label {
+                font-size: 0.85em;
+                color: var(--secondary-text-color);
             }
 
             input[type="range"] {

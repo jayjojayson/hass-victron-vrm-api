@@ -6,7 +6,10 @@
 
 */
 
-const CARD_VERSION = "1.9";
+// Version kommt aus der eigenen URL (?v=...), die die Integration aus manifest.json setzt.
+// Sie wird an alle Unter-Dateien weitergereicht → nach jedem Update lädt der Browser
+// garantiert die neuen Dateien (keine Pflege mehr an mehreren Stellen nötig).
+const CARD_VERSION = new URL(import.meta.url).searchParams.get('v') || 'dev';
 
 console.info(
   "%c 🗲 %c - %cVictron VRM API Card%c - %c 🗲 \n%c version " + CARD_VERSION + " ",
@@ -18,11 +21,12 @@ console.info(
   "color: white; font-weight: bold; background: grey"
 );
 
-import './editor.js?v=1.9';
-import * as libVenus from './lib-venus.js?v=1.9';
-
-import { cssDataDark } from './css-dark.js?v=1.9';
-import { cssDataLight } from './css-light.js?v=1.9';
+const [{ EDITOR_TAG }, libVenus, { cssDataDark }, { cssDataLight }] = await Promise.all([
+  import(`./editor.js?v=${CARD_VERSION}`),
+  import(`./lib-venus.js?v=${CARD_VERSION}`),
+  import(`./css-dark.js?v=${CARD_VERSION}`),
+  import(`./css-light.js?v=${CARD_VERSION}`),
+]);
 
 // Fortlaufende ID pro Karteninstanz – wird zum Scopen des CSS genutzt,
 // damit mehrere Karten (z.B. Dashboard + Editor-Vorschau, hell + dunkel)
@@ -220,7 +224,7 @@ class VictronVrmApiCard extends HTMLElement {
 
   // Méthode pour générer l'élément de configuration
   static getConfigElement(hass) {
-    const editor = document.createElement('venus-os-editor');
+    const editor = document.createElement(EDITOR_TAG);
     if (hass) editor.hass = hass;
     return editor;
   }

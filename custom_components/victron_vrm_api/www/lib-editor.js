@@ -19,7 +19,7 @@ let fallbackTranslations = {}; // Englisch als Rückfall für fehlende Schlüsse
 export let loadedLanguage = null;
 
 const SUPPORTED_LANGUAGES = ["de", "en", "fr"];
-const FILE_VERSION = "1.9"; // bei jedem Release erhöhen (Cache-Busting)
+const FILE_VERSION = new URL(import.meta.url).searchParams.get("v") || "dev"; // Cache-Busting (aus ?v=...)
 
 export async function loadTranslations(appendTo) {
     // HA liefert z.B. "de", "en-GB", "fr-CA" → auf Basissprache reduzieren
@@ -257,6 +257,10 @@ export function tab1Render(appendTo) {
       // Activer le switch uniquement si la clé existe et que sa valeur est "auto"
       setSwitchChecked(fontSwitch, appendTo._config.styles?.[section.path] === 'auto');
     
+      const autoLabel = document.createElement('span');
+      autoLabel.classList.add('vrm-switch-label');
+      autoLabel.textContent = t("tab1Render", "auto_size");
+      switchContainer.appendChild(autoLabel);
       switchContainer.appendChild(fontSwitch);
       switchCell.appendChild(switchContainer);
       sectionRow.appendChild(switchCell);
@@ -278,6 +282,7 @@ export function tab1Render(appendTo) {
       { label: t("tab1Render", "box_shadow_color"), path: 'colors.boxShadow',  defaultDark: '#38619b', defaultLight: '#38619b' },
       { label: t("tab1Render", "anchor_color"),     path: 'colors.anchor',    defaultDark: '#38619b', defaultLight: '#38619b' },
       { label: t("tab1Render", "graph_color"),      path: 'colors.graph',     defaultDark: '#4369a2', defaultLight: '#4369a2' },
+      { label: t("tab1Render", "history_color"),    path: 'colors.history',   defaultDark: '#ffffff', defaultLight: '#000000' },
       { label: t("tab1Render", "ball_color"),       path: 'colors.ball',      defaultDark: '#4369a2', defaultLight: '#4369a2' },
       { label: t("tab1Render", "text_main_color"),  path: 'colors.textMain',  defaultDark: '#ffffff',  defaultLight: '#484848' },
       { label: t("tab1Render", "text_sub_color"),   path: 'colors.textSub',   defaultDark: '#aaaaaa', defaultLight: '#aaaaaa' },
@@ -298,15 +303,16 @@ export function tab1Render(appendTo) {
         input.type = 'color';
         input.dataset.path = opt.path;
         input.style.cssText = 'width:56px;height:32px;border:none;background:none;cursor:pointer;padding:0;box-sizing:border-box;';
-        input.value = currentVal || opt.defaultDark;
+        const isLight = appendTo._config?.theme === 'light';
+        input.value = currentVal || (isLight ? opt.defaultLight : opt.defaultDark);
         cell.appendChild(lbl);
         cell.appendChild(input);
         row.appendChild(cell);
       });
       return row;
     };
-    colorsRow.appendChild(makeColorRow(colorOptions.slice(0, 3)));
-    colorsRow.appendChild(makeColorRow(colorOptions.slice(3)));
+    colorsRow.appendChild(makeColorRow(colorOptions.slice(0, 4)));
+    colorsRow.appendChild(makeColorRow(colorOptions.slice(4)));
     editorDiv.appendChild(colorsRow);
 
     // Ball-Größen-Slider
@@ -511,6 +517,25 @@ export function subtabRender(box, config, hass, appendTo) {
                         id="footer3_sensor"
                         data-path="devices.${box}.footerEntity3"
                     ></ha-selector>
+                </div>
+
+                <!-- FOOTER LAYOUT & AUSRICHTUNG -->
+                <div class="row">
+                    <label class="vrm-field cell">
+                        <span class="vrm-field-label">${t("subtabRender", "footer_layout")}</span>
+                        <select class="vrm-input" id="footer_layout" data-path="devices.${box}.footerLayout">
+                            <option value="">${t("subtabRender", "layout_horizontal")}</option>
+                            <option value="vertical"${config?.devices?.[box]?.footerLayout === "vertical" ? " selected" : ""}>${t("subtabRender", "layout_vertical")}</option>
+                        </select>
+                    </label>
+                    <label class="vrm-field cell">
+                        <span class="vrm-field-label">${t("subtabRender", "footer_align")}</span>
+                        <select class="vrm-input" id="footer_align" data-path="devices.${box}.footerAlign">
+                            <option value="left"${config?.devices?.[box]?.footerAlign === "left" ? " selected" : ""}>${t("subtabRender", "align_left")}</option>
+                            <option value=""${!["left", "right"].includes(config?.devices?.[box]?.footerAlign) ? " selected" : ""}>${t("subtabRender", "align_center")}</option>
+                            <option value="right"${config?.devices?.[box]?.footerAlign === "right" ? " selected" : ""}>${t("subtabRender", "align_right")}</option>
+                        </select>
+                    </label>
                 </div>
             </div>
         </ha-expansion-panel>
@@ -874,6 +899,21 @@ export function attachLinkInputs(appendTo) {
 /* envoi pour mise a jour du yaml               */
 /************************************************/
 export function attachInputs(appendTo) {
+
+    // Listener pour les <select> (Footer-Layout/-Ausrichtung, Link Start/Ende)
+    appendTo.shadowRoot.querySelectorAll('select[data-path]').forEach((selectEl) => {
+        if (eventHandlers.has(selectEl)) return;
+        const handleChange = (e) => {
+            const key = selectEl.dataset.path;
+            const value = e.target.value || null;
+            if (key) {
+                appendTo._config = updateConfigRecursively(appendTo._config, key, value, true);
+                notifyConfigChange(appendTo);
+            }
+        };
+        selectEl.addEventListener('change', handleChange);
+        eventHandlers.set(selectEl, handleChange);
+    });
         
     // Listener pour les `ha-textfield` sauf les champs "anchor"
     appendTo.shadowRoot.querySelectorAll('input.vrm-input').forEach((textField) => {

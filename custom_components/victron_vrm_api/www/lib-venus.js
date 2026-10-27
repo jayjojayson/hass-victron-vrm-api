@@ -279,7 +279,7 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
         let addSensor2Style = "";
         let addFooterStyle = "";
         
-        if(isTrue(device.graph)) creatGraph(boxId, device, isDark, appendTo);
+        if(isTrue(device.graph)) creatGraph(boxId, device, isDark, appendTo, config);
         
         if(isTrue(device.gauge)) {
             const pct = parseFloat(main.raw);
@@ -363,17 +363,36 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
             `;
         }
             
-        if(device.footerEntity1) {
-                
-            const f1 = formatEntity(hass, device.footerEntity1);
-            const f2 = formatEntity(hass, device.footerEntity2);
-            const f3 = formatEntity(hass, device.footerEntity3);
-            
+        // Footer: nur konfigurierte Werte anzeigen (1 bis 3), Layout und Ausrichtung pro Box
+        const footerEntities = [device.footerEntity1, device.footerEntity2, device.footerEntity3].filter(Boolean);
+        if(footerEntities.length) {
+            const layout = device.footerLayout === "vertical" ? "vertical" : "horizontal";
+            const align = ["left", "center", "right"].includes(device.footerAlign) ? device.footerAlign : "center";
+            const justify = { left: "flex-start", center: "center", right: "flex-end" }[align];
+
+            const footerCss = [];
+            const fontCss = addFooterStyle.replace(/^ style="|"$/g, "");
+            if (fontCss) footerCss.push(fontCss);
+
+            let cellCss = "";
+            if (layout === "vertical") {
+                footerCss.push(`flex-direction: column; align-items: ${justify}; gap: 2px; left: 0; box-sizing: border-box; padding: 0 6%;`);
+                cellCss = ` style="width: auto; justify-content: ${justify};"`;
+            } else if (align !== "center" || footerEntities.length < 3) {
+                // Bei weniger als 3 Werten oder links/rechts: Zellen nach Inhalt breit
+                footerCss.push(`justify-content: ${justify}; left: 0; box-sizing: border-box; padding: 0 6%; gap: 8%;`);
+                cellCss = ` style="width: auto; justify-content: ${justify};"`;
+            }
+            // horizontal + mittig + 3 Werte = bisheriges Standard-Layout (3 gleich breite Zellen)
+
+            const cells = footerEntities.map((entityId) => {
+                const f = formatEntity(hass, entityId);
+                return `<div class="footerCell"${cellCss}>${esc(f.value)}<div class="boxUnit">${esc(f.unit)}</div></div>`;
+            }).join("");
+
             addFooter = `
-                <div class="boxFooter"${addFooterStyle}>
-                    <div class="footerCell">${esc(f1.value)}<div class="boxUnit">${esc(f1.unit)}</div></div>
-                    <div class="footerCell">${esc(f2.value)}<div class="boxUnit">${esc(f2.unit)}</div></div>
-                    <div class="footerCell">${esc(f3.value)}<div class="boxUnit">${esc(f3.unit)}</div></div>
+                <div class="boxFooter footer-${layout}"${footerCss.length ? ` style="${footerCss.join(" ")}"` : ""}>
+                    ${cells}
                 </div>
             `;
         }
@@ -417,13 +436,16 @@ export function fillBox(config, styles, isDark, hass, appendTo) {
     }
 }
 
-function creatGraph (boxId, device, isDark, appendTo) {
+function creatGraph (boxId, device, isDark, appendTo, config) {
     
     const state = getState(appendTo);
     const version = historicVersion.get(device.entity);
 
     // Nur zeichnen, wenn neue Daten vorliegen (pro Karte und Box)
-    if (version === undefined || state.graphDrawn.get(boxId) === `${device.entity}#${version}`) return;
+    // Farbe des Verlaufs: frei wählbar (colors.history), sonst weiß/schwarz halbtransparent
+    const customColor = config?.colors?.history;
+    const graphKey = `${device.entity}#${version}#${customColor || ""}#${isDark}`;
+    if (version === undefined || state.graphDrawn.get(boxId) === graphKey) return;
     
     const divGraph = appendTo.querySelector(`#dashboard > #column-${boxId[0]} > #box_${boxId} > #graph_${boxId}`);
     const data = historicData.get(device.entity);
@@ -433,20 +455,18 @@ function creatGraph (boxId, device, isDark, appendTo) {
     // Générer le path SVG
     const pathD = generatePath(data, 500, 99); // Dimensions SVG fixées pour cet exemple
 
-    let colorPath = "#00000077";
-    if(isDark) {
-        colorPath = "#ffffff77";
-    } 
+    const colorPath = customColor || (isDark ? "#ffffff" : "#000000");
+    const opacityPath = customColor ? 0.9 : 0.47;
     
     if (!pathD || pathD.includes("NaN")) return;
 
     divGraph.innerHTML = `
         <svg viewBox="0 0 500 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="width: 100%; height: 100%;">
-            <path fill="none" stroke="${colorPath}" stroke-width="3" d="${pathD}" />
+            <path fill="none" stroke="${esc(colorPath)}" stroke-opacity="${opacityPath}" stroke-width="3" d="${pathD}" />
         </svg>
     `;
 
-    state.graphDrawn.set(boxId, `${device.entity}#${version}`);
+    state.graphDrawn.set(boxId, graphKey);
 }
 
 function generatePath(data, svgWidth = 500, svgHeight = 100) {
@@ -1124,12 +1144,13 @@ export function getDefaultConfig(hass) {
     const vrmBatteryPower = pickVrm("batteries_power_total", "battery_power");
     // Battery Current (Richtung der Animation)
     const vrmBatteryCurrent = pickVrm("current");
-    // Grid Power (Grid Meter gesamt, sonst MultiPlus AC In)
-    const vrmGrid = pickVrm("grid_total_power", "ac_input_power_l1");
-    // Home Power (MultiPlus AC Out)
-    const vrmHome = pickVrm("ac_output_power_l1");
-    // Solar Power (Summen-Sensoren bevorzugt)
-    const vrmSolar = pickVrm("solar_chargers_power_total", "pv_inverters_power_total", "battery_watts", "l1_power");
+    // Grid Power: Netz gesamt laut System (alle Phasen, auch Verbraucher vor dem
+    // MultiPlus), sonst Grid Meter, sonst nur MultiPlus AC-Eingang L1
+    const vrmGrid = pickVrm("system_grid_power", "grid_total_power", "ac_input_power_l1");
+    // Home Power: gesamter AC-Verbrauch laut System, sonst MultiPlus AC-Ausgang L1
+    const vrmHome = pickVrm("system_ac_consumption", "ac_output_power_l1");
+    // Solar Power: PV gesamt laut System (MPPT + PV-Wechselrichter), sonst Summen-Sensoren
+    const vrmSolar = pickVrm("system_pv_power", "solar_chargers_power_total", "pv_inverters_power_total", "battery_watts", "l1_power");
     // --- END CUSTOM LOGIC ---
       
     const powerEntities = Object.keys(states).filter((entityId) => {

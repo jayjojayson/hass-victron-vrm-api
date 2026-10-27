@@ -1,8 +1,12 @@
 
-// ?v=... verhindert, dass Browser nach einem Update alte Dateien aus dem Cache nutzen
-import {css} from './css-editor.js?v=1.9';
+// ?v=... (von victron-vrm-api.js weitergereicht) verhindert, dass Browser nach einem
+// Update alte Dateien aus dem Cache nutzen
+const FILE_VERSION = new URL(import.meta.url).searchParams.get('v') || 'dev';
 
-import * as libEditor from './lib-editor.js?v=1.9';
+const [{ css }, libEditor] = await Promise.all([
+    import(`./css-editor.js?v=${FILE_VERSION}`),
+    import(`./lib-editor.js?v=${FILE_VERSION}`),
+]);
 
 class venusOsDashBoardEditor extends HTMLElement {
 
@@ -54,9 +58,22 @@ class venusOsDashBoardEditor extends HTMLElement {
         this.renderTabContent();
     }
 
+    // Reiter-Beschriftung in der HA-Sprache (de: "Allgemein", "Spalte 1" … / en: "Conf.", "Col. 1" …)
+    updateTabLabels() {
+        if (!this.shadowRoot) return;
+        this.shadowRoot.querySelectorAll('#tab-group .vrm-tab').forEach((tab) => {
+            const index = parseInt(tab.getAttribute('data-tab'), 10);
+            tab.textContent = index === 0
+                ? libEditor.t("tabs", "general")
+                : `${libEditor.t("tabs", "column")} ${index}`;
+        });
+    }
+
     renderTabContent() {
 
         if (!this.shadowRoot || !this._config) return;
+
+        this.updateTabLabels();
 
         if (this._currentTab === 1 || this._currentTab === 2 || this._currentTab === 3) {
             libEditor.tabColRender(this._currentTab, this);
@@ -93,6 +110,11 @@ class venusOsDashBoardEditor extends HTMLElement {
     }
 }
 
-if (!customElements.get('venus-os-editor')) {
-    customElements.define('venus-os-editor', venusOsDashBoardEditor);
+// Eindeutiger Elementname: "venus-os-editor" wird auch von der Venus-OS-Dashboard-Card
+// (Basis dieses Codes) registriert. War diese Card ebenfalls geladen, zeigte HA deren
+// Editor statt unseres an (fremde Felder, "⚠️ tab1Render..."-Texte, nicht bedienbar).
+export const EDITOR_TAG = 'victron-vrm-api-card-editor';
+
+if (!customElements.get(EDITOR_TAG)) {
+    customElements.define(EDITOR_TAG, venusOsDashBoardEditor);
 }

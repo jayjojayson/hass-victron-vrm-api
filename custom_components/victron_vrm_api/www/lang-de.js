@@ -10,7 +10,7 @@ export default {
     in_header: "im Header",
     in_devices: "in Geräten",
     in_footer: "im Footer",
-    font_size: "Schriftgröße",
+    font_size: "Schriftgröße (px)",
     colors_title: "Farben anpassen:",
     box_shadow_color: "Box/Rahmen",
     anchor_color: "Ankerpunkt",
@@ -18,7 +18,9 @@ export default {
     ball_color: "Animationspunkt",
     text_main_color: "Hauptwert Schrift",
     text_sub_color: "Unterwert Schrift",
-    ball_size: "Größe Animationspunkt"
+    ball_size: "Größe Animationspunkt",
+    history_color: "Verlauf (Graph)",
+    auto_size: "Auto"
   },
   subtabRender: {
     header_title: "Header Konfiguration",
@@ -41,7 +43,14 @@ export default {
     bottom_qtyBox: "Unten",
     right_qtyBox: "Rechts",
     add_links: "Links hinzufügen",
-    add_link: "Link hinzufügen"
+    add_link: "Link hinzufügen",
+    footer_layout: "Footer-Anordnung",
+    layout_horizontal: "Nebeneinander",
+    layout_vertical: "Untereinander",
+    footer_align: "Footer-Ausrichtung",
+    align_left: "Links",
+    align_center: "Mittig",
+    align_right: "Rechts"
   },
   addLink: {
     start: "Start",
@@ -50,5 +59,9 @@ export default {
     reverse: "umkehren",
     link_title: "Link",
     delete_link: "Link löschen"
+  },
+  tabs: {
+    general: "Allgemein",
+    column: "Spalte"
   }
 };

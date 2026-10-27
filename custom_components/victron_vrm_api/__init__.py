@@ -1,4 +1,5 @@
 """The component entry point for the Victron VRM Energy integration."""
+import json
 import logging
 from pathlib import Path
 
@@ -15,9 +16,21 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 
-# ?v=... bei jedem Release erhöhen: erzwingt, dass Browser die neue Card-Version laden
-# (alte Ressourcen-Einträge mit anderer Version werden automatisch ersetzt).
-_LOVELACE_CARD_URL = "/victron_vrm_api/victron-vrm-api.js?v=1.9"
+
+
+def _read_version() -> str:
+    """Version aus manifest.json lesen (einzige Stelle, die pro Release gepflegt wird)."""
+    try:
+        manifest = json.loads((Path(__file__).parent / "manifest.json").read_text(encoding="utf-8"))
+        return str(manifest.get("version", "0"))
+    except (OSError, ValueError):
+        return "0"
+
+
+# ?v=<Version aus manifest.json>: erzwingt, dass Browser nach einem Update die neue
+# Card laden. Alte Ressourcen-Einträge mit anderer Version werden automatisch ersetzt.
+# Die Card reicht diese Version an alle ihre Unter-Dateien weiter (siehe www/*.js).
+_LOVELACE_CARD_URL = f"/victron_vrm_api/victron-vrm-api.js?v={_read_version()}"
 _WWW_PATH = str(Path(__file__).parent / "www")
 
 # NOTE: async_reload_entry und der Update Listener sind entfernt.

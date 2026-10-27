@@ -10,7 +10,7 @@ export default {
     in_header: "in header",
     in_devices: "in devices",
     in_footer: "in footer",
-    font_size: "Font size",
+    font_size: "Font size (px)",
     colors_title: "Customize colors:",
     box_shadow_color: "Box border",
     anchor_color: "Anchor point",
@@ -18,7 +18,9 @@ export default {
     ball_color: "Animation dot",
     text_main_color: "Main value text",
     text_sub_color: "Sub value text",
-    ball_size: "Animation dot size"
+    ball_size: "Animation dot size",
+    history_color: "History graph",
+    auto_size: "Auto"
   },
   subtabRender: {
     header_title: "Header configuration",
@@ -41,7 +43,14 @@ export default {
     bottom_qtyBox: "Bottom",
     right_qtyBox: "Right",
     add_links: "Add links",
-    add_link: "Add link"
+    add_link: "Add link",
+    footer_layout: "Footer layout",
+    layout_horizontal: "Horizontal",
+    layout_vertical: "Vertical",
+    footer_align: "Footer alignment",
+    align_left: "Left",
+    align_center: "Center",
+    align_right: "Right"
   },
   addLink: {
     start: "Start",
@@ -50,5 +59,9 @@ export default {
     reverse: "reverse",
     link_title: "Link",
     delete_link: "Delete link"
+  },
+  tabs: {
+    general: "Conf.",
+    column: "Col."
   }
 };
