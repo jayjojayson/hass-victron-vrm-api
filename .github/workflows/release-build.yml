@@ -1,26 +1,62 @@
-name: release-build
+name: Release ZIP
+
+# Hängt bei jedem veröffentlichten GitHub-Release automatisch victron_vrm_api.zip an.
+# HACS lädt dank "zip_release" in hacs.json genau dieses Asset herunter –
+# dadurch zählt GitHub die Downloads pro Release.
+#
+# WICHTIG: Die ZIP enthält die Dateien der Integration direkt im Wurzelverzeichnis
+# (manifest.json, sensor.py, www/ …), NICHT in einem Unterordner. HACS entpackt sie
+# nach custom_components/victron_vrm_api/.
+#
+# Manuell neu bauen (z.B. für ein bestehendes Release): Actions → Release ZIP →
+# "Run workflow" und den Tag angeben (z.B. v_2.0).
 
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release-Tag, dessen ZIP neu gebaut werden soll (z.B. v_2.0)"
+        required: true
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  build-and-upload:
     runs-on: ubuntu-latest
-
+    env:
+      DOMAIN: victron_vrm_api
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Create release zip
-        run: |
-          cd custom_components
-          zip -r ../victron_vrm_api.zip victron_vrm_api/ -x "*.pyc" -x "*/__pycache__/*" -x "*.backup"
-
-      - name: Upload zip to release
-        uses: softprops/action-gh-release@v2
         with:
-          files: victron_vrm_api.zip
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: Check tag against manifest version
+        run: |
+          MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('custom_components/${DOMAIN}/manifest.json'))['version'])")
+          # Tags im Format "v_2.0", "v2.0" oder "2.0" erlauben
+          TAG_VERSION="${TAG#v}"
+          TAG_VERSION="${TAG_VERSION#_}"
+          echo "Release-Tag: ${TAG} | manifest.json: ${MANIFEST_VERSION}"
+          if [ "${TAG_VERSION}" != "${MANIFEST_VERSION}" ]; then
+            echo "::error::Release-Tag (${TAG}) passt nicht zur Version in manifest.json (${MANIFEST_VERSION})."
+            exit 1
+          fi
+
+      - name: Build ZIP
+        run: |
+          cd "custom_components/${DOMAIN}"
+          zip -r "../../${DOMAIN}.zip" . \
+            -x "*/__pycache__/*" "__pycache__/*" \
+            -x "*.pyc" "*.backup" ".DS_Store" "*/.DS_Store"
+          cd ../..
+          unzip -l "${DOMAIN}.zip"
+
+      - name: Upload ZIP to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${TAG}" "${DOMAIN}.zip" --clobber
